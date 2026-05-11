@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#EE7203">
+<title>Lista Cumpărături Online</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #f4f5f7; color: #1d1d1f; line-height: 1.4; }
+  body { padding-bottom: 100px; }
+
+  header { position: sticky; top: 0; z-index: 50; background: linear-gradient(135deg, #EE7203 0%, #f59e0b 100%); color: white; padding: 14px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+  .header-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  header h1 { font-size: 18px; font-weight: 700; letter-spacing: 0.3px; }
+  .stats { display: flex; gap: 14px; font-size: 12px; opacity: 0.95; margin-top: 4px; }
+  .total-box { background: rgba(255,255,255,0.18); padding: 8px 14px; border-radius: 10px; text-align: right; backdrop-filter: blur(10px); }
+  .total-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.85; }
+  .total-value { font-size: 18px; font-weight: 700; line-height: 1.1; }
+
+  .toggle-form { width: 100%; padding: 14px 12px; background: white; border: none; border-bottom: 1px solid #e5e7eb; font-size: 15px; font-weight: 600; color: #EE7203; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; touch-action: manipulation; min-height: 44px; }
+  .toggle-form:active { background: #fff7ed; transform: scale(0.99); }
+  .toggle-form .chev { transition: transform 0.2s; }
+  .toggle-form.open .chev { transform: rotate(180deg); }
+
+  form { background: white; padding: 14px; border-bottom: 1px solid #e5e7eb; display: none; }
+  form.open { display: block; }
+  .field { margin-bottom: 10px; }
+  .field label { display: block; font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 4px; }
+  .field input { width: 100%; padding: 10px 12px; font-size: 16px; border: 1px solid #d1d5db; border-radius: 8px; background: #f9fafb; transition: border-color 0.15s, background 0.15s; }
+  .field input:focus { outline: none; border-color: #EE7203; background: white; }
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .form-actions { display: flex; gap: 8px; margin-top: 6px; }
+  .btn { flex: 1; padding: 13px 16px; font-size: 16px; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; transition: opacity 0.15s, transform 0.1s; touch-action: manipulation; min-height: 44px; }
+  .btn:active { opacity: 0.8; transform: scale(0.97); }
+  .btn:disabled { opacity: 0.5; cursor: wait; }
+  .btn-primary { background: #EE7203; color: white; }
+  .btn-secondary { background: #e5e7eb; color: #374151; }
+
+  .hint { font-size: 11px; margin-top: 6px; min-height: 14px; }
+  .hint.loading { color: #2563eb; }
+  .hint.success { color: #059669; }
+  .hint.error { color: #dc2626; }
+  .hint.warning { color: #d97706; }
+  .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid #dbeafe; border-top-color: #2563eb; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .preview-box { display: flex; gap: 10px; padding: 10px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; margin-bottom: 10px; }
+  .preview-box img { width: 56px; height: 56px; border-radius: 6px; object-fit: cover; background: #f3f4f6; border: 1px solid #d1d5db; }
+  .preview-body { flex: 1; min-width: 0; }
+  .preview-name { font-size: 13px; font-weight: 600; color: #166534; word-wrap: break-word; }
+  .preview-price { font-size: 12px; color: #15803d; margin-top: 2px; }
+
+  .list { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .empty { text-align: center; padding: 60px 20px; color: #9ca3af; font-size: 14px; }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
+
+  .item { background: white; border-radius: 12px; padding: 12px; display: grid; grid-template-columns: 72px 1fr auto; gap: 12px; align-items: start; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: opacity 0.2s; }
+  .item.checked { opacity: 0.55; }
+  .item.checked .item-name, .item.checked .item-subtotal { text-decoration: line-through; }
+
+  .item-img { width: 72px; height: 72px; border-radius: 8px; object-fit: cover; background: #f3f4f6; border: 1px solid #e5e7eb; }
+  .item-img.placeholder { display: flex; align-items: center; justify-content: center; font-size: 24px; color: #d1d5db; }
+
+  .item-body { min-width: 0; }
+  .item-name { font-size: 14px; font-weight: 600; color: #1f2937; margin-bottom: 6px; word-wrap: break-word; }
+  .item-meta { font-size: 12px; color: #6b7280; margin-bottom: 6px; }
+  .item-subtotal { font-size: 15px; font-weight: 700; color: #EE7203; margin-bottom: 6px; }
+  .item-link { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #2563eb; text-decoration: none; padding: 4px 8px; background: #eff6ff; border-radius: 6px; font-weight: 600; }
+  .item-link:active { background: #dbeafe; }
+
+  .item-actions { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+  .check-btn { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #d1d5db; background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; color: transparent; transition: all 0.15s; touch-action: manipulation; }
+  .check-btn.checked { background: #10b981; border-color: #10b981; color: white; }
+  .check-btn:active { transform: scale(0.9); }
+  .icon-btn { width: 40px; height: 40px; border-radius: 8px; border: none; background: transparent; cursor: pointer; font-size: 18px; color: #9ca3af; display: flex; align-items: center; justify-content: center; touch-action: manipulation; }
+  .icon-btn:active { background: #f3f4f6; color: #ef4444; transform: scale(0.9); }
+  .icon-btn.edit:active { color: #2563eb; }
+
+  footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 8px 10px; padding-bottom: max(8px, env(safe-area-inset-bottom)); border-top: 1px solid #e5e7eb; box-shadow: 0 -2px 8px rgba(0,0,0,0.06); display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; z-index: 40; }
+  .footer-btn { padding: 10px 4px; min-height: 52px; font-size: 11px; font-weight: 600; color: #4b5563; background: #f3f4f6; border: none; border-radius: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+  .footer-btn .icon { font-size: 20px; line-height: 1; }
+  .footer-btn:active { background: #d1d5db; transform: scale(0.95); }
+  .footer-btn.danger:active { background: #fee2e2; color: #dc2626; }
+
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: white; border-radius: 16px; padding: 20px; max-width: 400px; width: 100%; max-height: 90vh; overflow-y: auto; }
+  .modal h2 { font-size: 17px; margin-bottom: 12px; color: #111827; }
+  .modal p { font-size: 14px; color: #4b5563; margin-bottom: 16px; }
+  .modal-actions { display: flex; gap: 8px; }
+
+  .toast { position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%); background: #1f2937; color: white; padding: 12px 20px; border-radius: 24px; font-size: 13px; opacity: 0; transition: opacity 0.3s, transform 0.3s; pointer-events: none; z-index: 200; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(-8px); }
+
+  /* ── Cloud sync ── */
+  .cloud-status-btn { background: none; border: none; cursor: pointer; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.9); touch-action: manipulation; vertical-align: middle; }
+  .cloud-status-btn:active { background: rgba(255,255,255,0.2); }
+  .cloud-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .cloud-dot.off     { background: rgba(255,255,255,0.35); }
+  .cloud-dot.synced  { background: #86efac; }
+  .cloud-dot.syncing { background: #fde68a; animation: blink 1s infinite; }
+  .cloud-dot.error   { background: #fca5a5; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
+
+  .cloud-field { margin-bottom: 12px; }
+  .cloud-field label { display: block; font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 4px; }
+  .cloud-field input { width: 100%; padding: 10px 12px; font-size: 15px; border: 1px solid #d1d5db; border-radius: 8px; background: #f9fafb; font-family: monospace; }
+  .cloud-field input:focus { outline: none; border-color: #EE7203; background: white; }
+  .bin-id-card { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 12px 14px; margin: 4px 0 12px; }
+  .bin-id-card .label { font-size: 11px; font-weight: 700; color: #15803d; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .bin-id-card .value { font-size: 13px; font-family: monospace; color: #166534; word-break: break-all; line-height: 1.5; }
+  .bin-id-card .copy-hint { font-size: 11px; color: #4ade80; margin-top: 6px; }
+  .btn-disconnect { width: 100%; padding: 12px; font-size: 14px; font-weight: 600; border: none; border-radius: 8px; background: #fee2e2; color: #dc2626; cursor: pointer; touch-action: manipulation; margin-top: 8px; }
+  .btn-disconnect:active { background: #fecaca; }
+  .info-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 10px 12px; font-size: 12px; color: #1e40af; line-height: 1.5; margin-bottom: 14px; }
+  .info-box a { color: #2563eb; font-weight: 600; }
+
+  @media (min-width: 720px) {
+    body { max-width: 720px; margin: 0 auto; box-shadow: 0 0 30px rgba(0,0,0,0.05); min-height: 100vh; background: #f4f5f7; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-row">
+    <div>
+      <h1>🛒 Lista Cumpărături Online</h1>
+      <div class="stats">
+        <span><span id="count-total">0</span> produse</span>
+        <span><span id="count-checked">0</span> bifate</span>
+        <button class="cloud-status-btn" id="btn-cloud" type="button">
+          <span class="cloud-dot off" id="cloud-dot"></span>
+          <span id="cloud-label">Cloud off</span>
+        </button>
+      </div>
+    </div>
+    <div class="total-box">
+      <div class="total-label">Total</div>
+      <div class="total-value"><span id="total-value">0,00</span> lei</div>
+    </div>
+  </div>
+</header>
+
+<button class="toggle-form" id="toggle-form" type="button">
+  <span id="toggle-form-label">+ Adaugă produs</span>
+  <span class="chev">▾</span>
+</button>
+
+<form id="add-form" autocomplete="off">
+  <div class="field">
+    <label for="f-url">Link produs (orice magazin online) *</label>
+    <div style="display:flex; gap:8px;">
+      <input type="url" id="f-url" placeholder="https://www.dedeman.ro, emag.ro, ikea.com..." required style="flex:1;">
+      <button type="button" class="btn btn-primary" id="btn-fetch" style="flex:0 0 auto; padding: 10px 14px;">↓ Extrage</button>
+    </div>
+    <div class="hint" id="fetch-status"></div>
+  </div>
+
+  <div class="row-2">
+    <div class="field">
+      <label for="f-qty">Cantitate *</label>
+      <input type="number" id="f-qty" step="1" min="1" value="1" required inputmode="numeric">
+    </div>
+    <div class="field">
+      <label for="f-price">Preț (lei)</label>
+      <input type="number" id="f-price" step="0.01" min="0" placeholder="auto" inputmode="decimal">
+    </div>
+  </div>
+
+  <details id="manual-fields" style="margin-bottom: 10px;">
+    <summary style="cursor:pointer; font-size:12px; color:#6b7280; padding: 4px 0;">▸ Editare manuală (denumire, poză)</summary>
+    <div class="field" style="margin-top: 8px;">
+      <label for="f-name">Denumire</label>
+      <input type="text" id="f-name" placeholder="auto din pagina magazinului">
+    </div>
+    <div class="field">
+      <label for="f-img">Link imagine</label>
+      <input type="url" id="f-img" placeholder="auto din pagina magazinului">
+    </div>
+  </details>
+
+  <div id="preview" class="preview-box" style="display:none;">
+    <img id="preview-img" alt="">
+    <div class="preview-body">
+      <div class="preview-name" id="preview-name"></div>
+      <div class="preview-price" id="preview-price"></div>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button type="button" class="btn btn-secondary" id="form-cancel">Renunță</button>
+    <button type="submit" class="btn btn-primary" id="form-submit">Adaugă</button>
+  </div>
+</form>
+
+<div class="list" id="list">
+  <div class="empty" id="empty-state">
+    <div class="empty-icon">📋</div>
+    <div>Lista e goală.</div>
+    <div style="margin-top: 6px; font-size: 12px;">Apasă „+ Adaugă produs" și lipește un link din orice magazin online.</div>
+  </div>
+</div>
+
+<footer>
+  <button class="footer-btn" id="btn-reset" type="button">
+    <span class="icon">↺</span><span>Reset bifări</span>
+  </button>
+  <button class="footer-btn" id="btn-export" type="button">
+    <span class="icon">⇩</span><span>Export</span>
+  </button>
+  <button class="footer-btn" id="btn-import" type="button">
+    <span class="icon">⇧</span><span>Import</span>
+  </button>
+  <button class="footer-btn danger" id="btn-clear" type="button">
+    <span class="icon">🗑</span><span>Goleste tot</span>
+  </button>
+</footer>
+
+<div id="import-sheet" style="display:none; position:fixed; top:0; right:0; bottom:0; left:0; z-index:150; background:rgba(0,0,0,0.5);">
+  <div style="position:absolute; bottom:0; left:0; right:0; background:white; border-radius:18px 18px 0 0; padding:20px 16px; padding-bottom:20px;">
+    <div style="font-size:15px; font-weight:700; color:#111; margin-bottom:16px; text-align:center;">Importă lista</div>
+    <button id="import-from-file" type="button" style="width:100%;padding:14px;margin-bottom:10px;font-size:15px;font-weight:600;border:1px solid #e5e7eb;border-radius:10px;background:white;cursor:pointer;display:flex;align-items:center;gap:12px;touch-action:manipulation;">
+      <span style="font-size:22px;">📂</span><span>Din fișier (JSON descărcat)</span>
+    </button>
+    <button id="import-from-paste" type="button" style="width:100%;padding:14px;margin-bottom:16px;font-size:15px;font-weight:600;border:1px solid #e5e7eb;border-radius:10px;background:white;cursor:pointer;display:flex;align-items:center;gap:12px;touch-action:manipulation;">
+      <span style="font-size:22px;">📋</span><span>Lipeste text JSON</span>
+    </button>
+    <button id="import-sheet-cancel" type="button" style="width:100%;padding:14px;font-size:15px;font-weight:600;border:none;border-radius:10px;background:#f3f4f6;cursor:pointer;touch-action:manipulation;">Renunță</button>
+  </div>
+</div>
+
+<input type="file" id="file-input" accept=".json,application/json,text/plain,*/*" style="display:none">
+
+<div class="modal-overlay" id="modal-import">
+  <div class="modal">
+    <h2>Import listă</h2>
+    <p style="margin-bottom:8px;">Lipește textul JSON copiat de pe alt dispozitiv:</p>
+    <textarea id="import-paste-area" style="width:100%;height:120px;padding:10px;font-size:14px;border:1px solid #d1d5db;border-radius:8px;resize:vertical;font-family:monospace;" placeholder='{"version":1,"items":[...]}'></textarea>
+    <div class="hint error" id="import-paste-error" style="margin-top:6px;"></div>
+    <div class="modal-actions" style="margin-top:12px;">
+      <button class="btn btn-secondary" id="modal-import-cancel" type="button">Renunță</button>
+      <button class="btn btn-primary" id="modal-import-ok" type="button">Importă</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2 id="modal-title">Confirmare</h2>
+    <p id="modal-message">Sigur?</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="modal-cancel" type="button">Nu</button>
+      <button class="btn btn-primary" id="modal-confirm" type="button">Da</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-cloud">
+  <div class="modal">
+    <h2>☁ Sincronizare cloud</h2>
+    <div class="info-box">
+      Necesită cont <strong>gratuit</strong> pe
+      <a href="https://jsonbin.io" target="_blank" rel="noopener">jsonbin.io</a>.<br>
+      După înregistrare: Dashboard → <strong>API Keys</strong> → copiază <strong>Master Key</strong>.
+    </div>
+    <div class="cloud-field">
+      <label>Master Key</label>
+      <input type="password" id="cloud-api-key" placeholder="$2b$10$..." autocomplete="off">
+    </div>
+    <div class="cloud-field">
+      <label>Bin ID <span style="font-weight:400;color:#9ca3af;">(lasă gol pentru a crea unul nou)</span></label>
+      <input type="text" id="cloud-bin-id" placeholder="Ex: 6654ab12e41b4d34f8b1c2a3" autocomplete="off">
+    </div>
+    <div id="cloud-bin-created" style="display:none;">
+      <div class="bin-id-card">
+        <div class="label">Bin ID — notează-l pentru alte dispozitive!</div>
+        <div class="value" id="cloud-bin-id-display"></div>
+        <div class="copy-hint" id="cloud-copy-hint">▸ Apasă pentru a copia</div>
+      </div>
+    </div>
+    <div class="hint" id="cloud-modal-status" style="min-height:18px; margin-bottom:10px;"></div>
+    <div style="display:flex; gap:8px;">
+      <button class="btn btn-secondary" id="cloud-modal-cancel" type="button">Închide</button>
+      <button class="btn btn-primary" id="cloud-modal-save" type="button">Conectează</button>
+    </div>
+    <button class="btn-disconnect" id="cloud-modal-disconnect" style="display:none;" type="button">✕ Dezactivează sincronizarea</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ============ STATE ============
+  const STORAGE_KEY = 'lista-dedeman-v1';
+  let items = [];
+  let editingId = null;
+
+  // CORS proxies — încercăm pe rând până prinde unul
+  const PROXIES = [
+    url => 'https://corsproxy.io/?' + encodeURIComponent(url),
+    url => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
+    url => 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(url),
+  ];
+
+  // ============ PERSISTENCE ============
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      items = raw ? JSON.parse(raw) : [];
+    } catch (e) { items = []; }
+  }
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); }
+    catch (e) { toast('Eroare la salvare!'); }
+    schedulePush();
+  }
+
+  // ============ HELPERS ============
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function fmt(n) { return Number(n || 0).toFixed(2).replace('.', ','); }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function escapeAttr(s) { return escapeHtml(s); }
+  function $(id) { return document.getElementById(id); }
+
+  function toast(msg) {
+    const t = $('toast'); t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  function confirmModal(title, message) {
+    return new Promise(resolve => {
+      const overlay = $('modal');
+      $('modal-title').textContent = title;
+      $('modal-message').textContent = message;
+      overlay.classList.add('open');
+      const yes = $('modal-confirm'), no = $('modal-cancel');
+      function cleanup(answer) {
+        overlay.classList.remove('open');
+        yes.removeEventListener('click', onYes);
+        no.removeEventListener('click', onNo);
+        overlay.removeEventListener('click', onOverlay);
+        resolve(answer);
+      }
+      function onYes() { cleanup(true); }
+      function onNo() { cleanup(false); }
+      function onOverlay(e) { if (e.target === overlay) cleanup(false); }
+      yes.addEventListener('click', onYes);
+      no.addEventListener('click', onNo);
+      overlay.addEventListener('click', onOverlay);
+    });
+  }
+
+  // ============ FETCH & PARSE DEDEMAN ============
+  async function fetchProductData(url) {
+    let html = null, lastErr = null;
+    for (const buildUrl of PROXIES) {
+      try {
+        const resp = await fetch(buildUrl(url), { method: 'GET' });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        html = await resp.text();
+        if (html && html.length > 1000) break;
+        html = null;
+      } catch (e) { lastErr = e; }
+    }
+    if (!html) throw new Error('Niciun proxy nu a răspuns: ' + (lastErr ? lastErr.message : 'eșec'));
+    return parseProductHtml(html, url);
+  }
+
+  function parseProductHtml(html, sourceUrl) {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const result = { name: '', img: '', price: 0 };
+
+    // 1) JSON-LD (Schema.org Product)
+    const ldNodes = doc.querySelectorAll('script[type="application/ld+json"]');
+    for (const node of ldNodes) {
+      try {
+        const data = JSON.parse(node.textContent);
+        const arr = Array.isArray(data) ? data : [data];
+        for (const obj of arr) {
+          const candidates = obj['@graph'] ? obj['@graph'] : [obj];
+          for (const c of candidates) {
+            const types = Array.isArray(c['@type']) ? c['@type'] : [c['@type']];
+            if (types.includes('Product')) {
+              if (!result.name && c.name) result.name = c.name;
+              if (!result.img) {
+                if (typeof c.image === 'string') result.img = c.image;
+                else if (Array.isArray(c.image) && c.image.length) result.img = typeof c.image[0] === 'string' ? c.image[0] : c.image[0].url;
+                else if (c.image && c.image.url) result.img = c.image.url;
+              }
+              if (!result.price) {
+                const o = c.offers && (Array.isArray(c.offers) ? c.offers[0] : c.offers);
+                if (o) {
+                  const p = parseFloat(o.price || (o.priceSpecification && o.priceSpecification.price));
+                  if (!isNaN(p)) result.price = p;
+                }
+              }
+            }
+          }
+        }
+      } catch (_) { /* ignore broken JSON-LD */ }
+    }
+
+    // 2) Open Graph / meta tags
+    const meta = (sel) => {
+      const el = doc.querySelector(sel);
+      return el ? el.getAttribute('content') : '';
+    };
+    if (!result.name) result.name = meta('meta[property="og:title"]') || meta('meta[name="title"]') || '';
+    if (!result.img)  result.img  = meta('meta[property="og:image"]') || meta('meta[name="image"]') || '';
+    if (!result.price) {
+      const pStr = meta('meta[property="product:price:amount"]') || meta('meta[property="og:price:amount"]') || meta('meta[itemprop="price"]');
+      const p = parseFloat(pStr);
+      if (!isNaN(p)) result.price = p;
+    }
+
+    // 3) Selectori HTML specifici (last resort)
+    if (!result.name) {
+      const h1 = doc.querySelector('h1');
+      if (h1) result.name = h1.textContent.trim();
+    }
+    if (!result.price) {
+      const text = doc.body ? doc.body.textContent : '';
+      const m = text.match(/(\d{1,5}[.,]\d{2})\s*lei/i);
+      if (m) result.price = parseFloat(m[1].replace(',', '.'));
+    }
+
+    // 4) Fallback final pentru denumire: din slug-ul URL-ului
+    if (!result.name) {
+      try {
+        const u = new URL(sourceUrl);
+        const m = u.pathname.match(/\/ro\/([^\/]+)\/p\//);
+        if (m) {
+          result.name = m[1].split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        }
+      } catch (_) {}
+    }
+
+    if (result.name) result.name = result.name.replace(/\s*[|–-]\s*(Dedeman|eMAG|IKEA|Leroy Merlin|Altex|Flanco|Carrefour|Kaufland|Mega Image).*$/i, '').trim();
+    return result;
+  }
+
+  function setFetchStatus(kind, msg) {
+    const el = $('fetch-status');
+    el.className = 'hint ' + (kind || '');
+    el.innerHTML = (kind === 'loading' ? '<span class="spinner"></span>' : '') + (msg || '');
+  }
+
+  function showPreview(data) {
+    const box = $('preview');
+    if (!data || (!data.name && !data.img && !data.price)) {
+      box.style.display = 'none'; return;
+    }
+    $('preview-name').textContent = data.name || '(fără denumire)';
+    $('preview-price').textContent = data.price ? (fmt(data.price) + ' lei') : '(fără preț)';
+    const img = $('preview-img');
+    if (data.img) { img.src = data.img; img.style.display = ''; }
+    else { img.style.display = 'none'; }
+    box.style.display = 'flex';
+  }
+
+  async function handleFetch() {
+    const url = $('f-url').value.trim();
+    if (!url) { setFetchStatus('error', 'Introdu mai întâi URL-ul'); return; }
+    if (!/^https?:\/\//.test(url)) { setFetchStatus('error', 'URL invalid'); return; }
+
+    setFetchStatus('loading', 'Extrag datele din pagina magazinului...');
+    const btn = $('btn-fetch'); btn.disabled = true;
+    try {
+      const data = await fetchProductData(url);
+      if (data.name) $('f-name').value = data.name;
+      if (data.img)  $('f-img').value  = data.img;
+      if (data.price) $('f-price').value = data.price.toFixed(2);
+
+      const missing = [];
+      if (!data.name) missing.push('denumire');
+      if (!data.img) missing.push('poză');
+      if (!data.price) missing.push('preț');
+      if (missing.length === 0) {
+        setFetchStatus('success', '✓ Date extrase cu succes');
+      } else {
+        setFetchStatus('warning', '⚠ Lipsesc: ' + missing.join(', ') + '. Completează manual.');
+        $('manual-fields').open = true;
+      }
+      showPreview(data);
+    } catch (err) {
+      setFetchStatus('error', '✕ Extragere eșuată. Completează manual datele.');
+      $('manual-fields').open = true;
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ============ RENDER ============
+  function render() {
+    const list = $('list'), empty = $('empty-state');
+    $('count-total').textContent = items.length;
+    $('count-checked').textContent = items.filter(i => i.checked).length;
+
+    let total = 0;
+    items.forEach(i => { total += (i.price || 0) * (i.qty || 0); });
+    $('total-value').textContent = fmt(total);
+
+    Array.from(list.querySelectorAll('.item')).forEach(n => n.remove());
+    if (items.length === 0) { empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    items.forEach(i => list.appendChild(itemNode(i)));
+  }
+
+  function itemNode(i) {
+    const div = document.createElement('div');
+    div.className = 'item' + (i.checked ? ' checked' : '');
+    div.dataset.id = i.id;
+    const sub = (i.price || 0) * (i.qty || 0);
+    const img = i.img
+      ? `<img class="item-img" src="${escapeAttr(i.img)}" alt="" loading="lazy" onerror="this.classList.add('placeholder');this.removeAttribute('src');this.alt='?';">`
+      : `<div class="item-img placeholder">📦</div>`;
+    div.innerHTML = `
+      ${img}
+      <div class="item-body">
+        <div class="item-name">${escapeHtml(i.name)}</div>
+        <div class="item-meta">${fmt(i.price)} lei × ${i.qty} buc</div>
+        <div class="item-subtotal">${fmt(sub)} lei</div>
+        <a class="item-link" href="${escapeAttr(i.url)}" target="_blank" rel="noopener">🔗 Vezi în shop</a>
+      </div>
+      <div class="item-actions">
+        <button class="check-btn ${i.checked ? 'checked' : ''}" data-action="check" title="Bifează">✓</button>
+        <button class="icon-btn edit" data-action="edit" title="Editează">✎</button>
+        <button class="icon-btn" data-action="delete" title="Șterge">✕</button>
+      </div>
+    `;
+    return div;
+  }
+
+  // ============ ACTIONS ============
+  function openForm(prefillId = null) {
+    const form = $('add-form'), toggle = $('toggle-form'), label = $('toggle-form-label');
+    form.classList.add('open');
+    toggle.classList.add('open');
+    editingId = prefillId;
+    if (prefillId) {
+      const it = items.find(x => x.id === prefillId);
+      if (it) {
+        $('f-url').value = it.url || '';
+        $('f-img').value = it.img || '';
+        $('f-name').value = it.name || '';
+        $('f-price').value = it.price;
+        $('f-qty').value = it.qty;
+        label.textContent = '✎ Editezi produs';
+        $('form-submit').textContent = 'Salvează';
+        $('manual-fields').open = true;
+      }
+    } else {
+      label.textContent = '× Închide formular';
+      $('form-submit').textContent = 'Adaugă';
+    }
+    $('f-url').focus();
+  }
+
+  function closeForm() {
+    const form = $('add-form'), toggle = $('toggle-form'), label = $('toggle-form-label');
+    form.classList.remove('open');
+    toggle.classList.remove('open');
+    form.reset();
+    $('f-qty').value = 1;
+    setFetchStatus('', '');
+    $('preview').style.display = 'none';
+    $('manual-fields').open = false;
+    editingId = null;
+    label.textContent = '+ Adaugă produs';
+    $('form-submit').textContent = 'Adaugă';
+  }
+
+  async function submitForm(e) {
+    e.preventDefault();
+    const url = $('f-url').value.trim();
+    if (!url) { toast('URL-ul e obligatoriu'); return; }
+
+    let name = $('f-name').value.trim();
+    let img = $('f-img').value.trim();
+    let price = parseFloat($('f-price').value) || 0;
+    const qty = parseInt($('f-qty').value, 10) || 1;
+
+    // Auto-fetch dacă lipsesc date și nu suntem în mod editare
+    if ((!name || !price) && !editingId) {
+      setFetchStatus('loading', 'Extrag datele înainte de salvare...');
+      try {
+        const data = await fetchProductData(url);
+        if (!name && data.name) name = data.name;
+        if (!img && data.img) img = data.img;
+        if (!price && data.price) price = data.price;
+        setFetchStatus('success', '✓ Date extrase');
+      } catch (_) {
+        setFetchStatus('error', '✕ Nu s-au putut extrage datele. Completează manual.');
+        $('manual-fields').open = true;
+        return;
+      }
+    }
+
+    if (!name) {
+      toast('Lipsește denumirea — apasă „Extrage" sau scrie-o manual');
+      $('manual-fields').open = true;
+      return;
+    }
+
+    const data = { url, img, name, price, qty };
+    if (editingId) {
+      const idx = items.findIndex(x => x.id === editingId);
+      if (idx !== -1) items[idx] = { ...items[idx], ...data };
+      toast('Produs actualizat');
+    } else {
+      items.push({ id: uid(), ...data, checked: false });
+      toast('Produs adăugat');
+    }
+    save();
+    render();
+    closeForm();
+  }
+
+  function onListClick(e) {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const itemEl = btn.closest('.item');
+    if (!itemEl) return;
+    const id = itemEl.dataset.id;
+    const action = btn.dataset.action;
+
+    if (action === 'check') {
+      const it = items.find(x => x.id === id);
+      if (it) { it.checked = !it.checked; save(); render(); }
+    } else if (action === 'edit') {
+      openForm(id);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (action === 'delete') {
+      confirmModal('Șterge produs', 'Ești sigur că vrei să ștergi acest produs?').then(ok => {
+        if (ok) {
+          items = items.filter(x => x.id !== id);
+          save(); render();
+          toast('Produs șters');
+        }
+      });
+    }
+  }
+
+  // ============ EXPORT / IMPORT ============
+  function buildExportPayload() {
+    return JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), items }, null, 2);
+  }
+
+  async function exportJson() {
+    if (items.length === 0) { toast('Lista e goală'); return; }
+    const json = buildExportPayload();
+    const date = new Date().toISOString().slice(0, 10);
+    const filename = `lista-cumparaturi-${date}.json`;
+
+    // Pe mobil, încearcă Web Share API cu fișier
+    if (navigator.share && navigator.canShare) {
+      try {
+        const blob = new Blob([json], { type: 'application/json' });
+        const file = new File([blob], filename, { type: 'application/json' });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: 'Lista Cumpărături Online' });
+          return;
+        }
+      } catch (e) {
+        if (e.name === 'AbortError') return;
+        // fall through la share text
+      }
+      // Dacă nu poate partaja fișier, încearcă share text
+      try {
+        await navigator.share({ title: 'Lista Cumpărături Online', text: json });
+        return;
+      } catch (e) {
+        if (e.name === 'AbortError') return;
+      }
+    }
+
+    // Fallback: descarcă fișier
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast('Listă exportată');
+  }
+
+  function normalizeIncoming(incoming) {
+    return incoming.map(x => ({
+      id: x.id || uid(),
+      url: x.url || '',
+      img: x.img || '',
+      name: x.name || '(fără nume)',
+      price: parseFloat(x.price) || 0,
+      qty: parseInt(x.qty, 10) || 1,
+      checked: !!x.checked,
+    }));
+  }
+
+  async function applyImport(incoming) {
+    if (!Array.isArray(incoming) || incoming.length === 0) {
+      toast('Niciun produs găsit în fișier'); return;
+    }
+    const ok = items.length === 0 ? true :
+      await confirmModal('Import listă',
+        `Lista actuală are ${items.length} produse. Înlocuiești cu cele ${incoming.length} importate?\n(Apasă Nu = adăugare la cele existente)`);
+    const normalized = normalizeIncoming(incoming);
+    items = ok ? normalized : items.concat(normalized);
+    save(); render();
+    toast(`${normalized.length} produse importate`);
+  }
+
+  function importJson(file) {
+    const reader = new FileReader();
+    reader.onerror = () => toast('Eroare la citirea fișierului');
+    reader.onload = function() {
+      try {
+        const text = reader.result;
+        if (!text || text.trim() === '') { toast('Fișier gol'); return; }
+        const data = JSON.parse(text);
+        const incoming = Array.isArray(data) ? data : (data.items || []);
+        applyImport(incoming);
+      } catch (err) {
+        toast('Fișier invalid (nu e JSON corect)');
+      }
+    };
+    reader.readAsText(file, 'UTF-8');
+  }
+
+  function openPasteModal() {
+    $('import-paste-area').value = '';
+    $('import-paste-error').textContent = '';
+    $('modal-import').classList.add('open');
+    setTimeout(() => $('import-paste-area').focus(), 100);
+  }
+
+  function closePasteModal() {
+    $('modal-import').classList.remove('open');
+  }
+
+  function doImportPaste() {
+    const text = $('import-paste-area').value.trim();
+    if (!text) { $('import-paste-error').textContent = 'Lipești textul JSON mai întâi'; return; }
+    try {
+      const data = JSON.parse(text);
+      const incoming = Array.isArray(data) ? data : (data.items || []);
+      closePasteModal();
+      applyImport(incoming);
+    } catch (err) {
+      $('import-paste-error').textContent = 'Text invalid — nu e JSON corect';
+    }
+  }
+
+  function showImportSheet() {
+    $('import-sheet').style.display = 'block';
+  }
+  function hideImportSheet() {
+    $('import-sheet').style.display = 'none';
+  }
+
+  // ============ CLOUD SYNC (JSONBin.io) ============
+  const CLOUD_CFG_KEY = 'lista-cloud-v1';
+  let cloudCfg = null;   // { apiKey, binId }
+  let cloudPushTimer = null;
+
+  function loadCloudCfg() {
+    try {
+      const raw = localStorage.getItem(CLOUD_CFG_KEY);
+      cloudCfg = raw ? JSON.parse(raw) : null;
+    } catch(e) { cloudCfg = null; }
+  }
+
+  function persistCloudCfg() {
+    if (cloudCfg) localStorage.setItem(CLOUD_CFG_KEY, JSON.stringify(cloudCfg));
+    else localStorage.removeItem(CLOUD_CFG_KEY);
+  }
+
+  function setCloudStatus(state, customLabel) {
+    const dot = $('cloud-dot'), lbl = $('cloud-label');
+    if (!dot || !lbl) return;
+    dot.className = 'cloud-dot ' + state;
+    const labels = { off:'Cloud off', synced:'☁ Sincronizat', syncing:'☁ Sincronizare…', error:'⚠ Cloud eroare' };
+    lbl.textContent = customLabel || labels[state] || 'Cloud';
+  }
+
+  async function apiCall(method, path, body) {
+    const resp = await fetch('https://api.jsonbin.io/v3/b' + path, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': cloudCfg.apiKey,
+        'X-Bin-Name': 'Lista Cumparaturi Online',
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!resp.ok) {
+      let msg = 'HTTP ' + resp.status;
+      try { const j = await resp.json(); msg = j.message || msg; } catch(_) {}
+      throw new Error(msg);
+    }
+    return resp.json();
+  }
+
+  async function cloudCreate() {
+    const data = await apiCall('POST', '', { items, updatedAt: new Date().toISOString() });
+    return data.metadata.id;
+  }
+
+  async function cloudRead() {
+    const data = await apiCall('GET', '/' + cloudCfg.binId + '/latest');
+    return data.record;
+  }
+
+  async function cloudWrite() {
+    await apiCall('PUT', '/' + cloudCfg.binId, { items, updatedAt: new Date().toISOString() });
+  }
+
+  function schedulePush() {
+    if (!cloudCfg) return;
+    clearTimeout(cloudPushTimer);
+    setCloudStatus('syncing');
+    cloudPushTimer = setTimeout(async () => {
+      try {
+        await cloudWrite();
+        setCloudStatus('synced');
+      } catch(e) {
+        setCloudStatus('error');
+      }
+    }, 1800);
+  }
+
+  async function cloudPullOnLoad() {
+    if (!cloudCfg) return;
+    setCloudStatus('syncing', '☁ Se încarcă…');
+    try {
+      const record = await cloudRead();
+      if (record && Array.isArray(record.items)) {
+        items = record.items;
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); } catch(_) {}
+        render();
+      }
+      setCloudStatus('synced');
+    } catch(e) {
+      setCloudStatus('error');
+    }
+  }
+
+  // ── Modal cloud ──
+  function openCloudModal() {
+    const configured = !!cloudCfg;
+    $('cloud-api-key').value   = cloudCfg ? cloudCfg.apiKey : '';
+    $('cloud-bin-id').value    = cloudCfg ? cloudCfg.binId  : '';
+    $('cloud-bin-created').style.display      = configured ? 'block' : 'none';
+    $('cloud-modal-disconnect').style.display = configured ? 'block' : 'none';
+    $('cloud-modal-save').textContent         = configured ? 'Actualizează' : 'Conectează';
+    if (configured) {
+      $('cloud-bin-id-display').textContent = cloudCfg.binId;
+    }
+    $('cloud-modal-status').className = 'hint';
+    $('cloud-modal-status').innerHTML = '';
+    $('modal-cloud').classList.add('open');
+  }
+
+  function closeCloudModal() {
+    $('modal-cloud').classList.remove('open');
+  }
+
+  function setModalStatus(kind, html) {
+    const el = $('cloud-modal-status');
+    el.className = 'hint ' + kind;
+    el.innerHTML = (kind === 'loading' ? '<span class="spinner"></span>' : '') + html;
+  }
+
+  async function saveCloudSetup() {
+    const apiKey = $('cloud-api-key').value.trim();
+    const binId  = $('cloud-bin-id').value.trim();
+    if (!apiKey) { setModalStatus('error', 'Introdu Master Key'); return; }
+
+    const btn = $('cloud-modal-save');
+    btn.disabled = true;
+    cloudCfg = { apiKey, binId: binId || null };
+
+    try {
+      if (!binId) {
+        setModalStatus('loading', 'Se creează bin nou…');
+        const newId = await cloudCreate();
+        cloudCfg.binId = newId;
+        persistCloudCfg();
+        $('cloud-bin-id').value = newId;
+        $('cloud-bin-id-display').textContent = newId;
+        $('cloud-bin-created').style.display = 'block';
+        $('cloud-modal-disconnect').style.display = 'block';
+        $('cloud-modal-save').textContent = 'Actualizează';
+        setModalStatus('success', '✓ Bin creat! Notează Bin ID-ul pentru alte dispozitive.');
+      } else {
+        setModalStatus('loading', 'Se verifică bin-ul…');
+        const record = await cloudRead();
+        if (record && Array.isArray(record.items) && record.items.length > 0) {
+          const ok = items.length === 0 ? true :
+            await confirmModal('Date în cloud', `Bin-ul are ${record.items.length} produse. Înlocuiești lista locală cu datele din cloud?`);
+          if (ok) { items = record.items; try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); } catch(_) {} render(); }
+        }
+        persistCloudCfg();
+        $('cloud-bin-id-display').textContent = binId;
+        $('cloud-bin-created').style.display = 'block';
+        $('cloud-modal-disconnect').style.display = 'block';
+        $('cloud-modal-save').textContent = 'Actualizează';
+        setModalStatus('success', '✓ Conectat cu succes!');
+      }
+      setCloudStatus('synced');
+      setTimeout(closeCloudModal, 2000);
+    } catch(e) {
+      cloudCfg = null;
+      setModalStatus('error', '✕ ' + (e.message || 'Verifică Master Key și conexiunea'));
+    }
+    btn.disabled = false;
+  }
+
+  function disconnectCloud() {
+    confirmModal('Dezactivează cloud', 'Oprești sincronizarea? Lista locală rămâne intactă.').then(ok => {
+      if (!ok) return;
+      cloudCfg = null;
+      persistCloudCfg();
+      setCloudStatus('off');
+      closeCloudModal();
+      toast('Sincronizare cloud dezactivată');
+    });
+  }
+
+  function copyBinId() {
+    if (!cloudCfg) return;
+    navigator.clipboard.writeText(cloudCfg.binId).then(() => {
+      $('cloud-copy-hint').textContent = '✓ Copiat!';
+      setTimeout(() => { $('cloud-copy-hint').textContent = '▸ Apasă pentru a copia'; }, 2000);
+    }).catch(() => toast(cloudCfg.binId));
+  }
+
+  // ============ INIT ============
+  function init() {
+    loadCloudCfg();
+    if (cloudCfg) {
+      setCloudStatus('syncing', '☁ Se încarcă…');
+      cloudPullOnLoad();
+    } else {
+      setCloudStatus('off');
+    }
+    load(); render();
+
+    $('toggle-form').addEventListener('click', () => {
+      const form = $('add-form');
+      if (form.classList.contains('open')) closeForm(); else openForm();
+    });
+    $('form-cancel').addEventListener('click', closeForm);
+    $('add-form').addEventListener('submit', submitForm);
+    $('btn-fetch').addEventListener('click', handleFetch);
+    $('list').addEventListener('click', onListClick);
+
+    // Auto-fetch la lipire URL
+    $('f-url').addEventListener('paste', () => {
+      setTimeout(() => {
+        const v = $('f-url').value.trim();
+        if (/^https?:\/\//.test(v)) handleFetch();
+      }, 50);
+    });
+
+    $('btn-reset').addEventListener('click', async () => {
+      const checked = items.filter(i => i.checked).length;
+      if (checked === 0) { toast('Nimic de resetat'); return; }
+      const ok = await confirmModal('Reset bifări', `Debifezi cele ${checked} produse marcate?`);
+      if (ok) { items.forEach(i => i.checked = false); save(); render(); toast('Bifări resetate'); }
+    });
+
+    $('btn-clear').addEventListener('click', async () => {
+      if (items.length === 0) { toast('Lista e deja goală'); return; }
+      const ok = await confirmModal('Șterge tot', `Sigur ștergi toate cele ${items.length} produse? Acțiunea nu poate fi anulată.`);
+      if (ok) { items = []; save(); render(); toast('Listă golită'); }
+    });
+
+    // Cloud sync modal
+    $('btn-cloud').addEventListener('click', openCloudModal);
+    $('cloud-modal-cancel').addEventListener('click', closeCloudModal);
+    $('cloud-modal-save').addEventListener('click', saveCloudSetup);
+    $('cloud-modal-disconnect').addEventListener('click', disconnectCloud);
+    $('modal-cloud').addEventListener('click', e => { if (e.target === $('modal-cloud')) closeCloudModal(); });
+    $('cloud-bin-id-display').addEventListener('click', copyBinId);
+    $('cloud-copy-hint').addEventListener('click', copyBinId);
+
+    $('btn-export').addEventListener('click', exportJson);
+
+    // Import sheet
+    $('btn-import').addEventListener('click', showImportSheet);
+    $('import-sheet-cancel').addEventListener('click', hideImportSheet);
+    $('import-sheet').addEventListener('click', e => { if (e.target === $('import-sheet')) hideImportSheet(); });
+    $('import-from-file').addEventListener('click', () => { hideImportSheet(); $('file-input').click(); });
+    $('import-from-paste').addEventListener('click', () => { hideImportSheet(); openPasteModal(); });
+
+    // File input
+    $('file-input').addEventListener('change', e => {
+      const f = e.target.files[0];
+      if (f) importJson(f);
+      e.target.value = '';
+    });
+
+    // Paste modal
+    $('modal-import-cancel').addEventListener('click', closePasteModal);
+    $('modal-import-ok').addEventListener('click', doImportPaste);
+    $('modal-import').addEventListener('click', e => { if (e.target === $('modal-import')) closePasteModal(); });
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>
