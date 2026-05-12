@@ -122,6 +122,24 @@
   .info-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 10px 12px; font-size: 12px; color: #1e40af; line-height: 1.5; margin-bottom: 14px; }
   .info-box a { color: #2563eb; font-weight: 600; }
 
+  /* ── Multi-list home ── */
+  .header-left { display:flex; align-items:center; flex:1; min-width:0; }
+  .btn-back { display:none; background:rgba(255,255,255,0.2); border:none; color:white; font-size:26px; font-weight:300; line-height:1; cursor:pointer; padding:2px 10px 4px 4px; border-radius:8px; touch-action:manipulation; min-width:36px; min-height:36px; flex-shrink:0; }
+  .btn-back:active { background:rgba(255,255,255,0.35); }
+
+  .home-view { padding:12px; display:flex; flex-direction:column; gap:10px; }
+  .list-card { background:white; border-radius:14px; padding:15px 14px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:12px; touch-action:manipulation; }
+  .list-card:active { background:#fafafa; transform:scale(0.99); }
+  .list-card-body { flex:1; min-width:0; cursor:pointer; }
+  .list-card-name { font-size:16px; font-weight:700; color:#111827; margin-bottom:3px; word-wrap:break-word; }
+  .list-card-meta { font-size:12px; color:#6b7280; }
+  .list-card-total { font-size:16px; font-weight:700; color:#EE7203; white-space:nowrap; cursor:pointer; flex-shrink:0; }
+  .list-card-actions { display:flex; gap:4px; flex-shrink:0; }
+  .new-list-btn { background:white; border:2px dashed #d1d5db; border-radius:14px; padding:18px; width:100%; display:flex; align-items:center; justify-content:center; gap:10px; font-size:15px; font-weight:600; color:#9ca3af; cursor:pointer; touch-action:manipulation; }
+  .new-list-btn:active { border-color:#EE7203; color:#EE7203; background:#fff7ed; }
+  .home-empty { text-align:center; padding:50px 20px; color:#9ca3af; font-size:14px; }
+  .home-empty .empty-icon { font-size:48px; margin-bottom:12px; opacity:0.4; }
+
   @media (min-width: 720px) {
     body { max-width: 720px; margin: 0 auto; box-shadow: 0 0 30px rgba(0,0,0,0.05); min-height: 100vh; background: #f4f5f7; }
   }
@@ -131,23 +149,37 @@
 
 <header>
   <div class="header-row">
-    <div>
-      <h1>🛒 Lista Cumpărături Online</h1>
-      <div class="stats">
-        <span><span id="count-total">0</span> produse</span>
-        <span><span id="count-checked">0</span> bifate</span>
-        <button class="cloud-status-btn" id="btn-cloud" type="button">
-          <span class="cloud-dot off" id="cloud-dot"></span>
-          <span id="cloud-label">Cloud off</span>
-        </button>
+    <div class="header-left">
+      <button class="btn-back" id="btn-back" type="button">‹</button>
+      <div>
+        <h1 id="header-h1">🛒 Lista Cumpărături Online</h1>
+        <div class="stats" id="header-stats">
+          <span><span id="count-total">0</span> produse</span>
+          <span><span id="count-checked">0</span> bifate</span>
+          <button class="cloud-status-btn" id="btn-cloud" type="button">
+            <span class="cloud-dot off" id="cloud-dot"></span>
+            <span id="cloud-label">Cloud off</span>
+          </button>
+        </div>
       </div>
     </div>
-    <div class="total-box">
+    <div class="total-box" id="total-box">
       <div class="total-label">Total</div>
       <div class="total-value"><span id="total-value">0,00</span> lei</div>
     </div>
   </div>
 </header>
+
+<div id="home-view">
+  <div class="home-view">
+    <div id="home-cards"></div>
+    <button class="new-list-btn" id="btn-new-list" type="button">
+      <span style="font-size:22px;">＋</span><span>Listă nouă</span>
+    </button>
+  </div>
+</div>
+
+<div id="list-view">
 
 <button class="toggle-form" id="toggle-form" type="button">
   <span id="toggle-form-label">+ Adaugă produs</span>
@@ -209,7 +241,9 @@
   </div>
 </div>
 
-<footer>
+</div><!-- /list-view -->
+
+<footer id="main-footer">
   <button class="footer-btn" id="btn-reset" type="button">
     <span class="icon">↺</span><span>Reset bifări</span>
   </button>
@@ -295,13 +329,30 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-name">
+  <div class="modal">
+    <h2 id="name-modal-title">Listă nouă</h2>
+    <div class="field" style="margin-bottom:6px;">
+      <input type="text" id="name-modal-input" placeholder="Ex: Dedeman, eMAG, Renovare baie..." maxlength="50" autocomplete="off" style="font-size:16px;">
+    </div>
+    <div class="hint error" id="name-modal-error" style="margin-bottom:10px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="name-modal-cancel" type="button">Renunță</button>
+      <button class="btn btn-primary" id="name-modal-ok" type="button">Confirmă</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
   // ============ STATE ============
-  const STORAGE_KEY = 'lista-dedeman-v1';
-  let items = [];
-  let editingId = null;
+  const STORAGE_KEY = 'lista-dedeman-v1'; // păstrat pentru migrare
+  const LISTS_KEY   = 'lista-cumparaturi-v2';
+  let allLists     = [];   // [{ id, name, items }]
+  let activeListId = null; // null = ecran principal
+  let items        = [];   // produsele listei active
+  let editingId    = null;
 
   // CORS proxies — încercăm pe rând până prinde unul
   const PROXIES = [
@@ -313,13 +364,27 @@
   // ============ PERSISTENCE ============
   function load() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      items = raw ? JSON.parse(raw) : [];
-    } catch (e) { items = []; }
+      const raw = localStorage.getItem(LISTS_KEY);
+      if (raw) { allLists = JSON.parse(raw); return; }
+      // Migrare din v1
+      const old = localStorage.getItem(STORAGE_KEY);
+      if (old) {
+        const oldItems = JSON.parse(old);
+        allLists = [{ id: uid(), name: 'Lista mea', items: Array.isArray(oldItems) ? oldItems : [] }];
+        saveLists();
+      }
+    } catch(e) { allLists = []; }
+  }
+  function saveLists() {
+    try { localStorage.setItem(LISTS_KEY, JSON.stringify(allLists)); }
+    catch(e) { toast('Eroare la salvare!'); }
   }
   function save() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); }
-    catch (e) { toast('Eroare la salvare!'); }
+    if (activeListId) {
+      const lst = allLists.find(l => l.id === activeListId);
+      if (lst) lst.items = [...items];
+    }
+    saveLists();
     schedulePush();
   }
 
@@ -358,6 +423,59 @@
       yes.addEventListener('click', onYes);
       no.addEventListener('click', onNo);
       overlay.addEventListener('click', onOverlay);
+    });
+  }
+
+  // ============ MODAL NUME (creare / redenumire) ============
+  let nameModalCb = null;
+  function openNameModal(title, defaultVal, cb) {
+    $('name-modal-title').textContent = title;
+    $('name-modal-input').value = defaultVal || '';
+    $('name-modal-error').textContent = '';
+    nameModalCb = cb;
+    $('modal-name').classList.add('open');
+    setTimeout(() => { $('name-modal-input').focus(); $('name-modal-input').select(); }, 150);
+  }
+  function closeNameModal() { $('modal-name').classList.remove('open'); nameModalCb = null; }
+  function confirmNameModal() {
+    const val = $('name-modal-input').value.trim();
+    if (!val) { $('name-modal-error').textContent = 'Introdu un nume'; return; }
+    const cb = nameModalCb; closeNameModal(); if (cb) cb(val);
+  }
+
+  // ============ GESTIONARE LISTE ============
+  function openList(id) {
+    const lst = allLists.find(l => l.id === id);
+    if (!lst) return;
+    activeListId = id;
+    items = [...lst.items];
+    closeForm();
+    render();
+  }
+  function backToHome() {
+    activeListId = null; items = []; render();
+  }
+  function promptNewList() {
+    openNameModal('Listă nouă', '', name => {
+      const lst = { id: uid(), name, items: [] };
+      allLists.push(lst); saveLists(); schedulePush(); openList(lst.id);
+    });
+  }
+  function promptRename(id) {
+    const lst = allLists.find(l => l.id === id); if (!lst) return;
+    openNameModal('Redenumește lista', lst.name, name => {
+      lst.name = name; saveLists(); schedulePush();
+      if (activeListId === id) $('header-h1').textContent = '🛒 ' + name;
+      else render();
+    });
+  }
+  function promptDeleteList(id) {
+    const lst = allLists.find(l => l.id === id); if (!lst) return;
+    confirmModal('Șterge lista', `Sigur ștergi lista „${lst.name}"? Toate produsele se pierd.`).then(ok => {
+      if (!ok) return;
+      allLists = allLists.filter(l => l.id !== id); saveLists(); schedulePush();
+      if (activeListId === id) backToHome(); else render();
+      toast('Listă ștearsă');
     });
   }
 
@@ -503,18 +621,71 @@
 
   // ============ RENDER ============
   function render() {
-    const list = $('list'), empty = $('empty-state');
-    $('count-total').textContent = items.length;
+    if (activeListId) renderListView(); else renderHomeView();
+  }
+
+  function renderHomeView() {
+    $('home-view').style.display = '';
+    $('list-view').style.display = 'none';
+    $('toggle-form').style.display = 'none';
+    $('main-footer').style.display = 'none';
+    $('btn-back').style.display = 'none';
+    $('header-h1').textContent = '🛒 Lista Cumpărături Online';
+    $('total-box').style.display = 'none';
+    const totalProduse = allLists.reduce((s, l) => s + l.items.length, 0);
+    const totalBifate  = allLists.reduce((s, l) => s + l.items.filter(i => i.checked).length, 0);
+    $('count-total').textContent   = totalProduse;
+    $('count-checked').textContent = totalBifate;
+
+    const container = $('home-cards');
+    container.innerHTML = '';
+    if (allLists.length === 0) {
+      container.innerHTML = '<div class="home-empty"><div class="empty-icon">🛍️</div><div>Nu ai nicio listă.</div><div style="margin-top:6px;font-size:12px;">Apasă „+ Listă nouă" pentru a crea prima ta listă.</div></div>';
+      return;
+    }
+    allLists.forEach(lst => {
+      const total   = lst.items.reduce((s, i) => s + (i.price||0)*(i.qty||0), 0);
+      const checked = lst.items.filter(i => i.checked).length;
+      const card = document.createElement('div');
+      card.className = 'list-card';
+      card.innerHTML = `
+        <div class="list-card-body">
+          <div class="list-card-name">${escapeHtml(lst.name)}</div>
+          <div class="list-card-meta">${lst.items.length} produse · ${checked} bifate</div>
+        </div>
+        <div class="list-card-total">${fmt(total)} lei</div>
+        <div class="list-card-actions">
+          <button class="icon-btn edit" data-action="rename" title="Redenumește">✎</button>
+          <button class="icon-btn" data-action="del" title="Șterge lista">✕</button>
+        </div>`;
+      card.querySelector('.list-card-body').addEventListener('click', () => openList(lst.id));
+      card.querySelector('.list-card-total').addEventListener('click', () => openList(lst.id));
+      card.querySelector('[data-action="rename"]').addEventListener('click', e => { e.stopPropagation(); promptRename(lst.id); });
+      card.querySelector('[data-action="del"]').addEventListener('click', e => { e.stopPropagation(); promptDeleteList(lst.id); });
+      container.appendChild(card);
+    });
+  }
+
+  function renderListView() {
+    $('home-view').style.display = 'none';
+    $('list-view').style.display = '';
+    $('toggle-form').style.display = '';
+    $('main-footer').style.display = '';
+    $('btn-back').style.display = '';
+    const lst = allLists.find(l => l.id === activeListId);
+    $('header-h1').textContent = '🛒 ' + (lst ? lst.name : '');
+    $('total-box').style.display = '';
+
+    const listEl = $('list'), empty = $('empty-state');
+    $('count-total').textContent   = items.length;
     $('count-checked').textContent = items.filter(i => i.checked).length;
-
     let total = 0;
-    items.forEach(i => { total += (i.price || 0) * (i.qty || 0); });
+    items.forEach(i => { total += (i.price||0)*(i.qty||0); });
     $('total-value').textContent = fmt(total);
-
-    Array.from(list.querySelectorAll('.item')).forEach(n => n.remove());
+    Array.from(listEl.querySelectorAll('.item')).forEach(n => n.remove());
     if (items.length === 0) { empty.style.display = 'block'; return; }
     empty.style.display = 'none';
-    items.forEach(i => list.appendChild(itemNode(i)));
+    items.forEach(i => listEl.appendChild(itemNode(i)));
   }
 
   function itemNode(i) {
@@ -654,11 +825,11 @@
 
   // ============ EXPORT / IMPORT ============
   function buildExportPayload() {
-    return JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), items }, null, 2);
+    return JSON.stringify({ version: 2, exportedAt: new Date().toISOString(), lists: allLists }, null, 2);
   }
 
   async function exportJson() {
-    if (items.length === 0) { toast('Lista e goală'); return; }
+    if (allLists.length === 0) { toast('Nu ai nicio listă de exportat'); return; }
     const json = buildExportPayload();
     const date = new Date().toISOString().slice(0, 10);
     const filename = `lista-cumparaturi-${date}.json`;
@@ -707,17 +878,27 @@
     }));
   }
 
-  async function applyImport(incoming) {
-    if (!Array.isArray(incoming) || incoming.length === 0) {
-      toast('Niciun produs găsit în fișier'); return;
+  async function applyImport(data) {
+    let incomingLists = [];
+    if (data && Array.isArray(data.lists)) {
+      incomingLists = data.lists.map(l => ({
+        id: l.id || uid(), name: l.name || 'Import',
+        items: normalizeIncoming(l.items || [])
+      }));
+    } else {
+      const rawItems = Array.isArray(data) ? data : (data && Array.isArray(data.items) ? data.items : []);
+      if (rawItems.length > 0) incomingLists = [{ id: uid(), name: 'Lista importată', items: normalizeIncoming(rawItems) }];
     }
-    const ok = items.length === 0 ? true :
-      await confirmModal('Import listă',
-        `Lista actuală are ${items.length} produse. Înlocuiești cu cele ${incoming.length} importate?\n(Apasă Nu = adăugare la cele existente)`);
-    const normalized = normalizeIncoming(incoming);
-    items = ok ? normalized : items.concat(normalized);
-    save(); render();
-    toast(`${normalized.length} produse importate`);
+    if (incomingLists.length === 0) { toast('Niciun produs găsit'); return; }
+    const totalItems = incomingLists.reduce((s, l) => s + l.items.length, 0);
+    const ok = allLists.length === 0 ? true :
+      await confirmModal('Import', `Importezi ${incomingLists.length} liste (${totalItems} produse total). Înlocuiești toate listele actuale?`);
+    if (ok) {
+      allLists = incomingLists;
+      if (activeListId) { const lst = allLists.find(l => l.id === activeListId); if (lst) items = [...lst.items]; else backToHome(); }
+      saveLists(); render();
+      toast(`${incomingLists.length} liste importate`);
+    }
   }
 
   function importJson(file) {
@@ -812,7 +993,7 @@
   }
 
   async function cloudCreate() {
-    const data = await apiCall('POST', '', { items, updatedAt: new Date().toISOString() });
+    const data = await apiCall('POST', '', { lists: allLists, updatedAt: new Date().toISOString() });
     return data.metadata.id;
   }
 
@@ -822,7 +1003,7 @@
   }
 
   async function cloudWrite() {
-    await apiCall('PUT', '/' + cloudCfg.binId, { items, updatedAt: new Date().toISOString() });
+    await apiCall('PUT', '/' + cloudCfg.binId, { lists: allLists, updatedAt: new Date().toISOString() });
   }
 
   function schedulePush() {
@@ -844,15 +1025,16 @@
     setCloudStatus('syncing', '☁ Se încarcă…');
     try {
       const record = await cloudRead();
-      if (record && Array.isArray(record.items)) {
-        items = record.items;
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); } catch(_) {}
-        render();
+      if (record) {
+        if (Array.isArray(record.lists)) {
+          allLists = record.lists;
+        } else if (Array.isArray(record.items)) {
+          allLists = [{ id: uid(), name: 'Lista principală', items: record.items }];
+        }
+        saveLists(); render();
       }
       setCloudStatus('synced');
-    } catch(e) {
-      setCloudStatus('error');
-    }
+    } catch(e) { setCloudStatus('error'); }
   }
 
   // ── Modal cloud ──
@@ -905,10 +1087,15 @@
       } else {
         setModalStatus('loading', 'Se verifică bin-ul…');
         const record = await cloudRead();
-        if (record && Array.isArray(record.items) && record.items.length > 0) {
-          const ok = items.length === 0 ? true :
-            await confirmModal('Date în cloud', `Bin-ul are ${record.items.length} produse. Înlocuiești lista locală cu datele din cloud?`);
-          if (ok) { items = record.items; try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); } catch(_) {} render(); }
+        if (record) {
+          if (Array.isArray(record.lists) && record.lists.length > 0) {
+            const ok = allLists.length === 0 ? true :
+              await confirmModal('Date în cloud', `Bin-ul are ${record.lists.length} liste. Înlocuiești listele locale?`);
+            if (ok) { allLists = record.lists; saveLists(); render(); }
+          } else if (Array.isArray(record.items) && record.items.length > 0) {
+            allLists = [{ id: uid(), name: 'Lista principală', items: record.items }];
+            saveLists(); render();
+          }
         }
         persistCloudCfg();
         $('cloud-bin-id-display').textContent = binId;
@@ -948,13 +1135,14 @@
   // ============ INIT ============
   function init() {
     loadCloudCfg();
+    load();
     if (cloudCfg) {
       setCloudStatus('syncing', '☁ Se încarcă…');
       cloudPullOnLoad();
     } else {
       setCloudStatus('off');
     }
-    load(); render();
+    render();
 
     $('toggle-form').addEventListener('click', () => {
       const form = $('add-form');
@@ -985,6 +1173,16 @@
       const ok = await confirmModal('Șterge tot', `Sigur ștergi toate cele ${items.length} produse? Acțiunea nu poate fi anulată.`);
       if (ok) { items = []; save(); render(); toast('Listă golită'); }
     });
+
+    // Navigare liste
+    $('btn-back').addEventListener('click', backToHome);
+    $('btn-new-list').addEventListener('click', promptNewList);
+
+    // Modal nume
+    $('name-modal-cancel').addEventListener('click', closeNameModal);
+    $('name-modal-ok').addEventListener('click', confirmNameModal);
+    $('modal-name').addEventListener('click', e => { if (e.target === $('modal-name')) closeNameModal(); });
+    $('name-modal-input').addEventListener('keydown', e => { if (e.key === 'Enter') confirmNameModal(); });
 
     // Cloud sync modal
     $('btn-cloud').addEventListener('click', openCloudModal);
