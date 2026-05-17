@@ -130,13 +130,13 @@
   .home-view { padding:12px; display:flex; flex-direction:column; gap:10px; }
   .section-header { font-size:11px; font-weight:800; color:#9ca3af; text-transform:uppercase; letter-spacing:1px; padding:6px 2px 4px; margin-top:6px; }
 
-  .list-card { background:white; border-radius:14px; padding:15px 14px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:12px; touch-action:manipulation; }
+  .list-card { width:100%; background:white; border-radius:14px; padding:14px 12px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:8px; touch-action:manipulation; box-sizing:border-box; }
   .list-card:active { background:#fafafa; transform:scale(0.99); }
-  .list-card-body { flex:1; min-width:0; cursor:pointer; }
-  .list-card-name { font-size:16px; font-weight:700; color:#111827; margin-bottom:3px; word-wrap:break-word; }
-  .list-card-meta { font-size:12px; color:#6b7280; }
-  .list-card-total { font-size:16px; font-weight:700; color:#EE7203; white-space:nowrap; cursor:pointer; flex-shrink:0; }
-  .list-card-actions { display:flex; gap:4px; flex-shrink:0; }
+  .list-card-body { flex:1 1 80px; min-width:0; overflow:hidden; cursor:pointer; }
+  .list-card-name { font-size:15px; font-weight:700; color:#111827; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .list-card-meta { font-size:12px; color:#6b7280; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .list-card-total { font-size:14px; font-weight:700; color:#EE7203; white-space:nowrap; cursor:pointer; flex-shrink:0; }
+  .list-card-actions { display:flex; gap:2px; flex-shrink:0; }
 
   .new-list-btn { background:white; border:2px dashed #d1d5db; border-radius:14px; padding:14px; width:100%; display:flex; align-items:center; justify-content:center; gap:10px; font-size:14px; font-weight:600; color:#9ca3af; cursor:pointer; touch-action:manipulation; }
   .new-list-btn:active { border-color:#EE7203; color:#EE7203; background:#fff7ed; }
@@ -1521,12 +1521,11 @@
   }
 
   function recoverOldData() {
-    // Caută date în toate cheile vechi
     const sources = [
-      { key: 'lista-cumparaturi-v2', label: 'v2 (sesiune anterioară)', isV2: true },
-      { key: 'lista-dedeman-v1',     label: 'v1 (original Dedeman)', isV1: true },
+      { key: 'lista-cumparaturi-v2', label: 'sesiunea anterioară (v2)', isV2: true },
+      { key: 'lista-dedeman-v1',     label: 'versiunea originală (v1)', isV1: true },
     ];
-    let found = null, foundLabel = '';
+    let found = null, foundLabel = '', foundKey = '';
     for (const s of sources) {
       try {
         const raw = localStorage.getItem(s.key);
@@ -1534,22 +1533,23 @@
         const parsed = JSON.parse(raw);
         if (s.isV1 && Array.isArray(parsed) && parsed.length > 0) {
           found = [{ id: uid(), name: 'Lista recuperată', type: 'online', status: 'active', items: parsed }];
-          foundLabel = `${parsed.length} produse din ${s.label}`;
-          break;
+          foundLabel = `${parsed.length} produse din ${s.label}`; foundKey = s.key; break;
         }
         if (s.isV2 && Array.isArray(parsed) && parsed.length > 0) {
-          found = parsed.map(l => ({ ...l, type: l.type || 'online', status: l.status || 'active' }));
-          foundLabel = `${parsed.length} liste din ${s.label}`;
-          break;
+          found = parsed.map(l => ({ ...l, type: l.type || 'online', status: l.status || 'active', items: l.items || [] }));
+          const total = found.reduce((s, l) => s + l.items.length, 0);
+          foundLabel = `${found.length} liste (${total} produse) din ${s.label}`; foundKey = s.key; break;
         }
       } catch(_) {}
     }
-    if (!found) { toast('Nu s-au găsit date vechi de recuperat'); return; }
-    confirmModal('Recuperare date', `S-au găsit: ${foundLabel}. Adaugi aceste liste la cele existente?`).then(ok => {
+    if (!found) { toast('Nu s-au găsit date vechi de recuperat în acest browser'); return; }
+    confirmModal('Recuperare date',
+      `S-au găsit: ${foundLabel}.\n\nListele recuperate vor ÎNLOCUI complet listele actuale. Continui?`
+    ).then(ok => {
       if (!ok) return;
-      found.forEach(l => { if (!allLists.find(x => x.id === l.id)) allLists.push(l); });
+      allLists = found; // înlocuire completă — nu merge prin ID-uri
       saveLists(); schedulePush(); render(); closeCloudModal();
-      toast(`Date recuperate: ${foundLabel}`);
+      toast(`✓ Recuperat: ${foundLabel}`);
     });
   }
 
