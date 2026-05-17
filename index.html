@@ -406,6 +406,7 @@
       <button class="btn btn-primary" id="cloud-modal-save" type="button">Conectează</button>
     </div>
     <button class="btn-disconnect" id="cloud-modal-disconnect" style="display:none;" type="button">✕ Dezactivează sincronizarea</button>
+    <button type="button" id="cloud-modal-recover" style="width:100%;padding:12px;margin-top:8px;font-size:14px;font-weight:600;border:1px dashed #d97706;border-radius:8px;background:#fffbeb;color:#92400e;cursor:pointer;touch-action:manipulation;">🔄 Recuperează date din sesiunea anterioară</button>
   </div>
 </div>
 
@@ -1425,12 +1426,19 @@
     try {
       const record = await cloudRead();
       if (record) {
-        if (Array.isArray(record.lists)) {
-          allLists = record.lists;
-        } else if (Array.isArray(record.items)) {
-          allLists = [{ id: uid(), name: 'Lista principală', items: record.items }];
+        let cloudLists = null;
+        if (Array.isArray(record.lists) && record.lists.length > 0)
+          cloudLists = record.lists;
+        else if (Array.isArray(record.items) && record.items.length > 0)
+          cloudLists = [{ id: uid(), name: 'Lista principală', type: 'online', status: 'active', items: record.items }];
+
+        if (cloudLists) {
+          if (allLists.filter(l => l.status === 'active').length === 0) {
+            // Local gol — preia din cloud
+            allLists = cloudLists; saveLists(); render();
+          }
+          // Dacă local are date, nu suprascrie automat — local are prioritate
         }
-        saveLists(); render();
       }
       setCloudStatus('synced');
     } catch(e) { setCloudStatus('error'); }
@@ -1510,6 +1518,39 @@
       setModalStatus('error', '✕ ' + (e.message || 'Verifică Master Key și conexiunea'));
     }
     btn.disabled = false;
+  }
+
+  function recoverOldData() {
+    // Caută date în toate cheile vechi
+    const sources = [
+      { key: 'lista-cumparaturi-v2', label: 'v2 (sesiune anterioară)', isV2: true },
+      { key: 'lista-dedeman-v1',     label: 'v1 (original Dedeman)', isV1: true },
+    ];
+    let found = null, foundLabel = '';
+    for (const s of sources) {
+      try {
+        const raw = localStorage.getItem(s.key);
+        if (!raw) continue;
+        const parsed = JSON.parse(raw);
+        if (s.isV1 && Array.isArray(parsed) && parsed.length > 0) {
+          found = [{ id: uid(), name: 'Lista recuperată', type: 'online', status: 'active', items: parsed }];
+          foundLabel = `${parsed.length} produse din ${s.label}`;
+          break;
+        }
+        if (s.isV2 && Array.isArray(parsed) && parsed.length > 0) {
+          found = parsed.map(l => ({ ...l, type: l.type || 'online', status: l.status || 'active' }));
+          foundLabel = `${parsed.length} liste din ${s.label}`;
+          break;
+        }
+      } catch(_) {}
+    }
+    if (!found) { toast('Nu s-au găsit date vechi de recuperat'); return; }
+    confirmModal('Recuperare date', `S-au găsit: ${foundLabel}. Adaugi aceste liste la cele existente?`).then(ok => {
+      if (!ok) return;
+      found.forEach(l => { if (!allLists.find(x => x.id === l.id)) allLists.push(l); });
+      saveLists(); schedulePush(); render(); closeCloudModal();
+      toast(`Date recuperate: ${foundLabel}`);
+    });
   }
 
   function disconnectCloud() {
@@ -1619,6 +1660,7 @@
     $('modal-cloud').addEventListener('click', e => { if (e.target === $('modal-cloud')) closeCloudModal(); });
     $('cloud-bin-id-display').addEventListener('click', copyBinId);
     $('cloud-copy-hint').addEventListener('click', copyBinId);
+    $('cloud-modal-recover').addEventListener('click', recoverOldData);
 
     $('btn-export').addEventListener('click', exportJson);
 
