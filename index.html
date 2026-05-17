@@ -1691,6 +1691,17 @@
 
   // ============ INIT ============
   function init() {
+    try { _initBody(); }
+    catch(e) {
+      console.error('INIT ERROR:', e);
+      const bar = document.createElement('div');
+      bar.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#dc2626;color:white;padding:10px 14px;font-size:13px;z-index:9999;white-space:pre-wrap;word-break:break-all;';
+      bar.textContent = '⚠ Eroare JS în init(): ' + e.message + '\n' + (e.stack || '');
+      document.body.prepend(bar);
+    }
+  }
+
+  function _initBody() {
     loadCloudCfg();
     load();
     if (cloudCfg) {
@@ -1807,6 +1818,7 @@
   }
 
   document.addEventListener('DOMContentLoaded', init);
+
 </script>
 
 </body>
