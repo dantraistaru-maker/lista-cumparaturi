@@ -324,22 +324,31 @@
 </div><!-- /list-view -->
 
 <footer id="main-footer" style="display:none;">
-  <div id="footer-list-bar" style="display:contents;">
-    <button class="footer-btn" id="btn-reset" type="button">
-      <span class="icon">↺</span><span>Reset</span>
-    </button>
-    <button class="footer-btn" id="btn-export" type="button">
+  <!-- fiecare bară ocupă tot footer-ul (grid-column:1/-1) și aranjează butoanele pe orizontală (flex) -->
+  <div id="footer-home-bar" style="display:none; grid-column:1/-1; gap:6px;">
+    <button class="footer-btn" id="btn-export-home" type="button" style="flex:1;">
       <span class="icon">⇩</span><span>Export</span>
     </button>
-    <button class="footer-btn" id="btn-import" type="button">
+    <button class="footer-btn" id="btn-import-home" type="button" style="flex:1;">
       <span class="icon">⇧</span><span>Import</span>
     </button>
-    <button class="footer-btn danger" id="btn-clear" type="button">
+  </div>
+  <div id="footer-list-bar" style="display:none; grid-column:1/-1; gap:6px;">
+    <button class="footer-btn" id="btn-reset" type="button" style="flex:1;">
+      <span class="icon">↺</span><span>Reset</span>
+    </button>
+    <button class="footer-btn" id="btn-export" type="button" style="flex:1;">
+      <span class="icon">⇩</span><span>Export</span>
+    </button>
+    <button class="footer-btn" id="btn-import" type="button" style="flex:1;">
+      <span class="icon">⇧</span><span>Import</span>
+    </button>
+    <button class="footer-btn danger" id="btn-clear" type="button" style="flex:1;">
       <span class="icon">🗑</span><span>Golește</span>
     </button>
   </div>
-  <div id="footer-archive-bar" style="display:none; grid-column:1/-1;">
-    <button class="footer-btn" id="btn-back-archive" type="button" style="width:100%; background:#f3f4f6;">
+  <div id="footer-archive-bar" style="display:none; grid-column:1/-1; gap:6px;">
+    <button class="footer-btn" id="btn-back-archive" type="button" style="flex:1; background:#f3f4f6;">
       <span class="icon">🏠</span><span>Înapoi la liste</span>
     </button>
   </div>
@@ -803,16 +812,17 @@
     else renderHomeView();
   }
 
-  function setHeaderForHome(title) {
-    $('header-h1').textContent = title;
-    $('btn-back').style.display = 'none';
-    $('total-box').style.display = 'none';
-    $('home-view').style.display = 'none';
+  function hideAllViews() {
+    $('home-view').style.display    = 'none';
     $('archive-view').style.display = 'none';
-    $('list-view').style.display = 'none';
-    $('main-footer').style.display = 'none';
+    $('list-view').style.display    = 'none';
+    $('toggle-form').style.display  = 'none';
+    $('btn-back').style.display     = 'none';
+    $('total-box').style.display    = 'none';
+    $('footer-home-bar').style.display    = 'none';
+    $('footer-list-bar').style.display    = 'none';
     $('footer-archive-bar').style.display = 'none';
-    $('footer-list-bar').style.display = 'contents';
+    $('main-footer').style.display  = 'none';
   }
 
   function makeListCard(lst, isArchive) {
@@ -867,42 +877,41 @@
   }
 
   function renderHomeView() {
-    setHeaderForHome('🛒 Lista Cumpărături Online');
-    $('home-view').style.display = '';
-    const active = allLists.filter(l => l.status === 'active');
-    const online = active.filter(l => l.type !== 'offline');
-    const offline = active.filter(l => l.type === 'offline');
-    renderSection('home-cards-online', online, false);
-    renderSection('home-cards-offline', offline, false);
-    const total = active.reduce((s, l) => s + l.items.reduce((ss, i) => ss + (i.price||0)*(i.qty||0), 0), 0);
-    $('count-total').textContent = active.reduce((s, l) => s + l.items.length, 0);
+    hideAllViews();
+    $('header-h1').textContent = '🛒 Lista Cumpărături Online';
+    $('home-view').style.display       = '';
+    $('main-footer').style.display     = '';
+    $('footer-home-bar').style.display = 'flex';
+
+    const active  = allLists.filter(l => l.status === 'active');
+    renderSection('home-cards-online',  active.filter(l => l.type !== 'offline'), false);
+    renderSection('home-cards-offline', active.filter(l => l.type === 'offline'),  false);
+    $('count-total').textContent   = active.reduce((s, l) => s + l.items.length, 0);
     $('count-checked').textContent = active.reduce((s, l) => s + l.items.filter(i => i.checked).length, 0);
   }
 
   function renderArchiveView() {
-    setHeaderForHome('🗄 Arhivă');
-    $('archive-view').style.display = '';
-    $('btn-back').style.display = 'inline-flex';
-    $('main-footer').style.display = '';
-    // Footer arhivă: doar butonul Acasă pe toată lățimea
-    $('footer-archive-bar').style.display = 'block';
-    $('footer-list-bar').style.display = 'none';
+    hideAllViews();
+    $('header-h1').textContent = '🗄 Arhivă';
+    $('archive-view').style.display          = '';
+    $('btn-back').style.display              = 'inline-flex';
+    $('main-footer').style.display           = '';
+    $('footer-archive-bar').style.display    = 'flex';
     const archived = allLists.filter(l => l.status === 'archived');
-    renderSection('archive-cards-online', archived.filter(l => l.type !== 'offline'), true);
-    renderSection('archive-cards-offline', archived.filter(l => l.type === 'offline'), true);
+    renderSection('archive-cards-online',  archived.filter(l => l.type !== 'offline'), true);
+    renderSection('archive-cards-offline', archived.filter(l => l.type === 'offline'),  true);
   }
 
   function renderListView() {
-    $('home-view').style.display = 'none';
-    $('archive-view').style.display = 'none';
-    $('list-view').style.display = '';
-    $('main-footer').style.display = '';
-    $('btn-back').style.display = 'inline-flex';
-    $('footer-archive-bar').style.display = 'none';
-    $('footer-list-bar').style.display = 'contents';
+    hideAllViews();
+    $('list-view').style.display          = '';
+    $('toggle-form').style.display        = '';
+    $('main-footer').style.display        = '';
+    $('btn-back').style.display           = 'inline-flex';
+    $('total-box').style.display          = '';
+    $('footer-list-bar').style.display    = 'flex';
     const lst = allLists.find(l => l.id === activeListId);
     $('header-h1').textContent = '🛒 ' + (lst ? lst.name : '');
-    $('total-box').style.display = '';
 
     // Afișează formularul corect
     const isOffline = lst && lst.type === 'offline';
@@ -1768,6 +1777,8 @@
     $('cloud-modal-recover').addEventListener('click', recoverOldData);
 
     $('btn-export').addEventListener('click', showExportSheet);
+    $('btn-export-home').addEventListener('click', showExportSheet);
+    $('btn-import-home').addEventListener('click', showImportSheet);
     $('export-btn-text').addEventListener('click', exportAsText);
     $('export-btn-csv').addEventListener('click', exportAsCsv);
     $('export-btn-json').addEventListener('click', exportAsJson);
