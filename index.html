@@ -128,6 +128,8 @@
   .btn-back:active { background:rgba(255,255,255,0.35); }
 
   .home-view { padding:12px; display:flex; flex-direction:column; gap:10px; }
+  .section-header { font-size:11px; font-weight:800; color:#9ca3af; text-transform:uppercase; letter-spacing:1px; padding:6px 2px 4px; margin-top:6px; }
+
   .list-card { background:white; border-radius:14px; padding:15px 14px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:12px; touch-action:manipulation; }
   .list-card:active { background:#fafafa; transform:scale(0.99); }
   .list-card-body { flex:1; min-width:0; cursor:pointer; }
@@ -135,10 +137,31 @@
   .list-card-meta { font-size:12px; color:#6b7280; }
   .list-card-total { font-size:16px; font-weight:700; color:#EE7203; white-space:nowrap; cursor:pointer; flex-shrink:0; }
   .list-card-actions { display:flex; gap:4px; flex-shrink:0; }
-  .new-list-btn { background:white; border:2px dashed #d1d5db; border-radius:14px; padding:18px; width:100%; display:flex; align-items:center; justify-content:center; gap:10px; font-size:15px; font-weight:600; color:#9ca3af; cursor:pointer; touch-action:manipulation; }
+
+  .new-list-btn { background:white; border:2px dashed #d1d5db; border-radius:14px; padding:14px; width:100%; display:flex; align-items:center; justify-content:center; gap:10px; font-size:14px; font-weight:600; color:#9ca3af; cursor:pointer; touch-action:manipulation; }
   .new-list-btn:active { border-color:#EE7203; color:#EE7203; background:#fff7ed; }
-  .home-empty { text-align:center; padding:50px 20px; color:#9ca3af; font-size:14px; }
-  .home-empty .empty-icon { font-size:48px; margin-bottom:12px; opacity:0.4; }
+
+  .archive-link-btn { width:100%; padding:14px; margin-top:8px; background:white; border:1px solid #e5e7eb; border-radius:12px; font-size:14px; font-weight:600; color:#6b7280; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; touch-action:manipulation; }
+  .archive-link-btn:active { background:#f3f4f6; }
+
+  .home-empty-section { text-align:center; padding:16px 12px; color:#d1d5db; font-size:13px; background:white; border-radius:12px; border:1px dashed #e5e7eb; }
+
+  /* item offline (fara imagine) */
+  .item.offline-item { grid-template-columns: 1fr auto; }
+
+  /* arhiva – buton restore */
+  .icon-btn.restore { color: #059669; }
+  .icon-btn.restore:active { background:#d1fae5; color:#065f46; }
+
+  /* import fisier offline */
+  .offline-import-btn { width:100%; padding:12px; background:#f0fdf4; border:none; border-bottom:1px solid #e5e7eb; font-size:14px; font-weight:600; color:#059669; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; touch-action:manipulation; }
+  .offline-import-btn:active { background:#dcfce7; }
+
+  /* preview import */
+  .preview-item-row { display:flex; align-items:center; padding:9px 12px; border-bottom:1px solid #f3f4f6; gap:10px; }
+  .preview-item-row:last-child { border-bottom:none; }
+  .preview-item-row input[type=checkbox] { width:18px; height:18px; flex-shrink:0; cursor:pointer; accent-color:#EE7203; }
+  .preview-item-row label { font-size:14px; cursor:pointer; flex:1; line-height:1.3; }
 
   @media (min-width: 720px) {
     body { max-width: 720px; margin: 0 auto; box-shadow: 0 0 30px rgba(0,0,0,0.05); min-height: 100vh; background: #f4f5f7; }
@@ -172,15 +195,35 @@
 
 <div id="home-view">
   <div class="home-view">
-    <div id="home-cards"></div>
-    <button class="new-list-btn" id="btn-new-list" type="button">
-      <span style="font-size:22px;">＋</span><span>Listă nouă</span>
+    <div class="section-header">🔗 Online</div>
+    <div id="home-cards-online"></div>
+    <button class="new-list-btn" id="btn-new-online" type="button">
+      <span style="font-size:18px;">＋</span><span>Listă online nouă</span>
     </button>
+
+    <div class="section-header" style="margin-top:12px;">📝 Offline / manuale</div>
+    <div id="home-cards-offline"></div>
+    <button class="new-list-btn" id="btn-new-offline" type="button">
+      <span style="font-size:18px;">＋</span><span>Listă offline nouă</span>
+    </button>
+
+    <button class="archive-link-btn" id="btn-go-archive" type="button">🗄 Arhivă</button>
+  </div>
+</div>
+
+<div id="archive-view" style="display:none;">
+  <div class="home-view">
+    <div class="section-header">🔗 Online arhivate</div>
+    <div id="archive-cards-online"></div>
+    <div class="section-header" style="margin-top:12px;">📝 Offline arhivate</div>
+    <div id="archive-cards-offline"></div>
   </div>
 </div>
 
 <div id="list-view">
 
+<!-- Formular ONLINE (cu URL) -->
+<div id="online-form-wrapper">
 <button class="toggle-form" id="toggle-form" type="button">
   <span id="toggle-form-label">+ Adaugă produs</span>
   <span class="chev">▾</span>
@@ -232,6 +275,43 @@
     <button type="submit" class="btn btn-primary" id="form-submit">Adaugă</button>
   </div>
 </form>
+
+</div><!-- /online-form-wrapper -->
+
+<!-- Formular OFFLINE (manual) -->
+<div id="offline-form-wrapper" style="display:none;">
+  <button class="offline-import-btn" id="btn-import-file-offline" type="button">
+    📥 Importă articole din fișier (Word, Excel, text)
+  </button>
+  <button class="toggle-form" id="toggle-offline-form" type="button">
+    <span id="toggle-offline-label">+ Adaugă produs</span>
+    <span class="chev">▾</span>
+  </button>
+  <form id="offline-form" autocomplete="off">
+    <div class="field">
+      <label for="of-name">Denumire *</label>
+      <input type="text" id="of-name" placeholder="Ex: Făină, Lapte, Cuie..." required>
+    </div>
+    <div class="row-2">
+      <div class="field">
+        <label for="of-qty">Cantitate *</label>
+        <input type="number" id="of-qty" step="1" min="1" value="1" required inputmode="numeric">
+      </div>
+      <div class="field">
+        <label for="of-unit">Unitate</label>
+        <input type="text" id="of-unit" placeholder="buc, kg, l, m..." maxlength="10">
+      </div>
+    </div>
+    <div class="field">
+      <label for="of-price">Preț (lei)</label>
+      <input type="number" id="of-price" step="0.01" min="0" placeholder="opțional" inputmode="decimal">
+    </div>
+    <div class="form-actions">
+      <button type="button" class="btn btn-secondary" id="offline-form-cancel">Renunță</button>
+      <button type="submit" class="btn btn-primary" id="offline-form-submit">Adaugă</button>
+    </div>
+  </form>
+</div><!-- /offline-form-wrapper -->
 
 <div class="list" id="list">
   <div class="empty" id="empty-state">
@@ -329,6 +409,25 @@
   </div>
 </div>
 
+<input type="file" id="file-input-offline" accept=".txt,.csv,.tsv,.docx,.xlsx,.xls,.odt,.ods,text/plain,text/csv,*/*" style="display:none">
+
+<div class="modal-overlay" id="modal-import-preview">
+  <div class="modal">
+    <h2>Articole identificate</h2>
+    <p style="font-size:13px;color:#6b7280;margin-bottom:10px;">Bifează articolele pe care vrei să le imporți. Prețul și cantitatea le completezi ulterior.</p>
+    <div style="display:flex;gap:8px;margin-bottom:8px;">
+      <button class="btn btn-secondary" id="preview-select-all" type="button" style="flex:1;padding:8px;font-size:13px;">Selectează tot</button>
+      <button class="btn btn-secondary" id="preview-deselect-all" type="button" style="flex:1;padding:8px;font-size:13px;">Deselectează tot</button>
+    </div>
+    <div id="import-preview-list" style="max-height:260px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:10px;"></div>
+    <div class="hint error" id="import-preview-error" style="margin-bottom:8px;min-height:16px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="import-preview-cancel" type="button">Renunță</button>
+      <button class="btn btn-primary" id="import-preview-ok" type="button">Importă selectate</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-name">
   <div class="modal">
     <h2 id="name-modal-title">Listă nouă</h2>
@@ -347,11 +446,16 @@
 
 <script>
   // ============ STATE ============
-  const STORAGE_KEY = 'lista-dedeman-v1'; // păstrat pentru migrare
-  const LISTS_KEY   = 'lista-cumparaturi-v2';
-  let allLists     = [];   // [{ id, name, items }]
-  let activeListId = null; // null = ecran principal
-  let items        = [];   // produsele listei active
+  const STORAGE_KEY = 'lista-dedeman-v1';     // migrare v1
+  const LISTS_KEY_V2 = 'lista-cumparaturi-v2'; // migrare v2
+  const LISTS_KEY   = 'lista-cumparaturi-v3';
+  // liste: [{ id, name, type:'online'|'offline', status:'active'|'archived', archivedAt?, items:[] }]
+  // items online:  { id, url, img, name, price, qty, checked }
+  // items offline: { id, name, qty, unit, price, checked }
+  let allLists     = [];
+  let activeView   = 'home'; // 'home' | 'list' | 'archive'
+  let activeListId = null;
+  let items        = [];
   let editingId    = null;
 
   // CORS proxies — încercăm pe rând până prinde unul
@@ -366,11 +470,18 @@
     try {
       const raw = localStorage.getItem(LISTS_KEY);
       if (raw) { allLists = JSON.parse(raw); return; }
+      // Migrare din v2
+      const raw2 = localStorage.getItem(LISTS_KEY_V2);
+      if (raw2) {
+        const v2 = JSON.parse(raw2);
+        allLists = v2.map(l => ({ ...l, type: l.type || 'online', status: l.status || 'active' }));
+        saveLists(); return;
+      }
       // Migrare din v1
       const old = localStorage.getItem(STORAGE_KEY);
       if (old) {
         const oldItems = JSON.parse(old);
-        allLists = [{ id: uid(), name: 'Lista mea', items: Array.isArray(oldItems) ? oldItems : [] }];
+        allLists = [{ id: uid(), name: 'Lista mea', type: 'online', status: 'active', items: Array.isArray(oldItems) ? oldItems : [] }];
         saveLists();
       }
     } catch(e) { allLists = []; }
@@ -447,17 +558,27 @@
   function openList(id) {
     const lst = allLists.find(l => l.id === id);
     if (!lst) return;
+    activeView = 'list';
     activeListId = id;
     items = [...lst.items];
-    closeForm();
+    closeForm(); closeOfflineForm();
     render();
   }
   function backToHome() {
-    activeListId = null; items = []; render();
+    activeView = 'home'; activeListId = null; items = []; render();
   }
-  function promptNewList() {
-    openNameModal('Listă nouă', '', name => {
-      const lst = { id: uid(), name, items: [] };
+  function goToArchive() {
+    activeView = 'archive'; activeListId = null; items = []; render();
+  }
+  function promptNewOnlineList() {
+    openNameModal('Listă online nouă', '', name => {
+      const lst = { id: uid(), name, type: 'online', status: 'active', items: [] };
+      allLists.push(lst); saveLists(); schedulePush(); openList(lst.id);
+    });
+  }
+  function promptNewOfflineList() {
+    openNameModal('Listă offline nouă', '', name => {
+      const lst = { id: uid(), name, type: 'offline', status: 'active', items: [] };
       allLists.push(lst); saveLists(); schedulePush(); openList(lst.id);
     });
   }
@@ -469,9 +590,28 @@
       else render();
     });
   }
+  function archiveList(id) {
+    const lst = allLists.find(l => l.id === id); if (!lst) return;
+    confirmModal('Arhivează lista', `Muți lista „${lst.name}" în arhivă?`).then(ok => {
+      if (!ok) return;
+      lst.status = 'archived'; lst.archivedAt = new Date().toISOString();
+      saveLists(); schedulePush();
+      if (activeListId === id) backToHome(); else render();
+      toast(`„${lst.name}" arhivată`);
+    });
+  }
+  function restoreList(id) {
+    const lst = allLists.find(l => l.id === id); if (!lst) return;
+    lst.status = 'active'; delete lst.archivedAt;
+    saveLists(); schedulePush(); render();
+    toast(`„${lst.name}" restaurată`);
+  }
   function promptDeleteList(id) {
     const lst = allLists.find(l => l.id === id); if (!lst) return;
-    confirmModal('Șterge lista', `Sigur ștergi lista „${lst.name}"? Toate produsele se pierd.`).then(ok => {
+    const msg = lst.status === 'archived'
+      ? `Ștergi definitiv lista „${lst.name}"? Nu mai poate fi recuperată.`
+      : `Sigur ștergi lista „${lst.name}"? Toate produsele se pierd.`;
+    confirmModal('Șterge lista', msg).then(ok => {
       if (!ok) return;
       allLists = allLists.filter(l => l.id !== id); saveLists(); schedulePush();
       if (activeListId === id) backToHome(); else render();
@@ -621,71 +761,138 @@
 
   // ============ RENDER ============
   function render() {
-    if (activeListId) renderListView(); else renderHomeView();
+    if (activeView === 'archive') renderArchiveView();
+    else if (activeView === 'list') renderListView();
+    else renderHomeView();
   }
 
-  function renderHomeView() {
-    $('home-view').style.display = '';
-    $('list-view').style.display = 'none';
-    $('toggle-form').style.display = 'none';
-    $('main-footer').style.display = 'none';
+  function setHeaderForHome(title) {
+    $('header-h1').textContent = title;
     $('btn-back').style.display = 'none';
-    $('header-h1').textContent = '🛒 Lista Cumpărături Online';
     $('total-box').style.display = 'none';
-    const totalProduse = allLists.reduce((s, l) => s + l.items.length, 0);
-    const totalBifate  = allLists.reduce((s, l) => s + l.items.filter(i => i.checked).length, 0);
-    $('count-total').textContent   = totalProduse;
-    $('count-checked').textContent = totalBifate;
+    $('home-view').style.display = 'none';
+    $('archive-view').style.display = 'none';
+    $('list-view').style.display = 'none';
+    $('main-footer').style.display = 'none';
+  }
 
-    const container = $('home-cards');
-    container.innerHTML = '';
-    if (allLists.length === 0) {
-      container.innerHTML = '<div class="home-empty"><div class="empty-icon">🛍️</div><div>Nu ai nicio listă.</div><div style="margin-top:6px;font-size:12px;">Apasă „+ Listă nouă" pentru a crea prima ta listă.</div></div>';
-      return;
-    }
-    allLists.forEach(lst => {
-      const total   = lst.items.reduce((s, i) => s + (i.price||0)*(i.qty||0), 0);
-      const checked = lst.items.filter(i => i.checked).length;
-      const card = document.createElement('div');
-      card.className = 'list-card';
+  function makeListCard(lst, isArchive) {
+    const total   = lst.items.reduce((s, i) => s + (i.price||0)*(i.qty||0), 0);
+    const checked = lst.items.filter(i => i.checked).length;
+    const card = document.createElement('div');
+    card.className = 'list-card';
+    const typeIcon = lst.type === 'offline' ? '📝' : '🔗';
+    if (isArchive) {
+      const d = new Date(lst.archivedAt||Date.now());
+      const dateStr = d.toLocaleDateString('ro-RO', { day:'numeric', month:'short', year:'numeric' });
       card.innerHTML = `
         <div class="list-card-body">
-          <div class="list-card-name">${escapeHtml(lst.name)}</div>
+          <div class="list-card-name">${typeIcon} ${escapeHtml(lst.name)}</div>
+          <div class="list-card-meta">${lst.items.length} produse · ${dateStr}</div>
+        </div>
+        <div class="list-card-total">${fmt(total)} lei</div>
+        <div class="list-card-actions">
+          <button class="icon-btn restore" data-action="restore" title="Restaurează">↩</button>
+          <button class="icon-btn" data-action="del" title="Șterge definitiv">✕</button>
+        </div>`;
+      card.querySelector('[data-action="restore"]').addEventListener('click', e => { e.stopPropagation(); restoreList(lst.id); });
+      card.querySelector('[data-action="del"]').addEventListener('click', e => { e.stopPropagation(); promptDeleteList(lst.id); });
+    } else {
+      card.innerHTML = `
+        <div class="list-card-body">
+          <div class="list-card-name">${typeIcon} ${escapeHtml(lst.name)}</div>
           <div class="list-card-meta">${lst.items.length} produse · ${checked} bifate</div>
         </div>
         <div class="list-card-total">${fmt(total)} lei</div>
         <div class="list-card-actions">
           <button class="icon-btn edit" data-action="rename" title="Redenumește">✎</button>
-          <button class="icon-btn" data-action="del" title="Șterge lista">✕</button>
+          <button class="icon-btn" data-action="archive" title="Arhivează">🗄</button>
+          <button class="icon-btn" data-action="del" title="Șterge">✕</button>
         </div>`;
       card.querySelector('.list-card-body').addEventListener('click', () => openList(lst.id));
       card.querySelector('.list-card-total').addEventListener('click', () => openList(lst.id));
       card.querySelector('[data-action="rename"]').addEventListener('click', e => { e.stopPropagation(); promptRename(lst.id); });
+      card.querySelector('[data-action="archive"]').addEventListener('click', e => { e.stopPropagation(); archiveList(lst.id); });
       card.querySelector('[data-action="del"]').addEventListener('click', e => { e.stopPropagation(); promptDeleteList(lst.id); });
-      container.appendChild(card);
-    });
+    }
+    return card;
+  }
+
+  function renderSection(containerId, lists, isArchive) {
+    const c = $(containerId); c.innerHTML = '';
+    if (lists.length === 0) {
+      c.innerHTML = '<div class="home-empty-section">Nicio listă ' + (isArchive ? 'arhivată' : 'activă') + '.</div>';
+      return;
+    }
+    lists.forEach(l => c.appendChild(makeListCard(l, isArchive)));
+  }
+
+  function renderHomeView() {
+    setHeaderForHome('🛒 Lista Cumpărături Online');
+    $('home-view').style.display = '';
+    const active = allLists.filter(l => l.status === 'active');
+    const online = active.filter(l => l.type !== 'offline');
+    const offline = active.filter(l => l.type === 'offline');
+    renderSection('home-cards-online', online, false);
+    renderSection('home-cards-offline', offline, false);
+    const total = active.reduce((s, l) => s + l.items.reduce((ss, i) => ss + (i.price||0)*(i.qty||0), 0), 0);
+    $('count-total').textContent = active.reduce((s, l) => s + l.items.length, 0);
+    $('count-checked').textContent = active.reduce((s, l) => s + l.items.filter(i => i.checked).length, 0);
+  }
+
+  function renderArchiveView() {
+    setHeaderForHome('🗄 Arhivă');
+    $('archive-view').style.display = '';
+    $('btn-back').style.display = '';
+    const archived = allLists.filter(l => l.status === 'archived');
+    renderSection('archive-cards-online', archived.filter(l => l.type !== 'offline'), true);
+    renderSection('archive-cards-offline', archived.filter(l => l.type === 'offline'), true);
   }
 
   function renderListView() {
     $('home-view').style.display = 'none';
+    $('archive-view').style.display = 'none';
     $('list-view').style.display = '';
-    $('toggle-form').style.display = '';
     $('main-footer').style.display = '';
     $('btn-back').style.display = '';
     const lst = allLists.find(l => l.id === activeListId);
     $('header-h1').textContent = '🛒 ' + (lst ? lst.name : '');
     $('total-box').style.display = '';
 
+    // Afișează formularul corect
+    const isOffline = lst && lst.type === 'offline';
+    $('online-form-wrapper').style.display = isOffline ? 'none' : '';
+    $('offline-form-wrapper').style.display = isOffline ? '' : 'none';
+
     const listEl = $('list'), empty = $('empty-state');
     $('count-total').textContent   = items.length;
     $('count-checked').textContent = items.filter(i => i.checked).length;
-    let total = 0;
-    items.forEach(i => { total += (i.price||0)*(i.qty||0); });
+    let total = 0; items.forEach(i => { total += (i.price||0)*(i.qty||0); });
     $('total-value').textContent = fmt(total);
     Array.from(listEl.querySelectorAll('.item')).forEach(n => n.remove());
     if (items.length === 0) { empty.style.display = 'block'; return; }
     empty.style.display = 'none';
-    items.forEach(i => listEl.appendChild(itemNode(i)));
+    items.forEach(i => listEl.appendChild(isOffline ? offlineItemNode(i) : itemNode(i)));
+  }
+
+  function offlineItemNode(i) {
+    const div = document.createElement('div');
+    div.className = 'item offline-item' + (i.checked ? ' checked' : '');
+    div.dataset.id = i.id;
+    const sub = (i.price||0) * (i.qty||0);
+    const unitStr = i.unit ? ` ${escapeHtml(i.unit)}` : ' buc';
+    div.innerHTML = `
+      <div class="item-body">
+        <div class="item-name">${escapeHtml(i.name)}</div>
+        <div class="item-meta">${fmt(i.price)} lei × ${i.qty}${unitStr}</div>
+        ${sub > 0 ? `<div class="item-subtotal">${fmt(sub)} lei</div>` : ''}
+      </div>
+      <div class="item-actions">
+        <button class="check-btn ${i.checked ? 'checked' : ''}" data-action="check" title="Bifează">✓</button>
+        <button class="icon-btn edit" data-action="edit" title="Editează">✎</button>
+        <button class="icon-btn" data-action="delete" title="Șterge">✕</button>
+      </div>`;
+    return div;
   }
 
   function itemNode(i) {
@@ -807,10 +1014,17 @@
     const action = btn.dataset.action;
 
     if (action === 'check') {
-      const it = items.find(x => x.id === id);
-      if (it) { it.checked = !it.checked; save(); render(); }
+      const idx = items.findIndex(x => x.id === id);
+      if (idx === -1) return;
+      const it = items.splice(idx, 1)[0];
+      it.checked = !it.checked;
+      if (it.checked) items.push(it);    // bifat → coadă
+      else items.unshift(it);            // debifat → început
+      save(); render();
     } else if (action === 'edit') {
-      openForm(id);
+      const lst = allLists.find(l => l.id === activeListId);
+      if (lst && lst.type === 'offline') openOfflineForm(id);
+      else openForm(id);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else if (action === 'delete') {
       confirmModal('Șterge produs', 'Ești sigur că vrei să ștergi acest produs?').then(ok => {
@@ -821,6 +1035,191 @@
         }
       });
     }
+  }
+
+  // ============ IMPORT FIȘIER OFFLINE ============
+  // Parser minimal ZIP (fără biblioteci externe)
+  async function readZipEntries(file) {
+    const buf = await file.arrayBuffer();
+    const v = new DataView(buf);
+    let eocd = -1;
+    for (let i = buf.byteLength - 22; i >= Math.max(0, buf.byteLength - 65580); i--) {
+      if (v.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+    }
+    if (eocd < 0) return null;
+    const cdOff = v.getUint32(eocd + 16, true);
+    const cdNum = v.getUint16(eocd + 8, true);
+    const entries = {}; let pos = cdOff;
+    for (let e = 0; e < cdNum; e++) {
+      if (pos + 46 > buf.byteLength || v.getUint32(pos, true) !== 0x02014b50) break;
+      const method = v.getUint16(pos + 10, true);
+      const cSize  = v.getUint32(pos + 20, true);
+      const fnLen  = v.getUint16(pos + 28, true);
+      const exLen  = v.getUint16(pos + 30, true);
+      const cmLen  = v.getUint16(pos + 32, true);
+      const lOff   = v.getUint32(pos + 42, true);
+      const fname  = new TextDecoder().decode(new Uint8Array(buf, pos + 46, fnLen));
+      entries[fname] = { method, cSize, lOff };
+      pos += 46 + fnLen + exLen + cmLen;
+    }
+    const result = {};
+    for (const [name, info] of Object.entries(entries)) {
+      const lp = info.lOff;
+      if (lp + 30 > buf.byteLength || v.getUint32(lp, true) !== 0x04034b50) continue;
+      const lfnLen = v.getUint16(lp + 26, true);
+      const lexLen = v.getUint16(lp + 28, true);
+      const dStart = lp + 30 + lfnLen + lexLen;
+      if (dStart + info.cSize > buf.byteLength) continue;
+      const comp = new Uint8Array(buf, dStart, info.cSize);
+      if (info.method === 0) {
+        result[name] = new Uint8Array(comp);
+      } else if (info.method === 8 && typeof DecompressionStream !== 'undefined') {
+        try {
+          const ds = new DecompressionStream('deflate-raw');
+          const w = ds.writable.getWriter(); w.write(comp); w.close();
+          const chunks = []; const r = ds.readable.getReader();
+          while (true) { const { done, value } = await r.read(); if (done) break; chunks.push(value); }
+          const tot = chunks.reduce((s, c) => s + c.length, 0);
+          const arr = new Uint8Array(tot); let i = 0;
+          for (const c of chunks) { arr.set(c, i); i += c.length; }
+          result[name] = arr;
+        } catch(_) {}
+      }
+    }
+    return result;
+  }
+
+  function xmlToLines(xmlBytes, tagPattern) {
+    const str = new TextDecoder().decode(xmlBytes);
+    const re = new RegExp('<(?:' + tagPattern + ')(?:\\s[^>]*)?>([^<]*)<\\/(?:' + tagPattern + ')>', 'g');
+    const out = []; let m;
+    while ((m = re.exec(str)) !== null) { const t = m[1].trim(); if (t) out.push(t); }
+    return out;
+  }
+
+  function docxParagraphs(xmlBytes) {
+    const str = new TextDecoder().decode(xmlBytes);
+    return str.split(/<w:p[ >]/).map(p => {
+      const runs = [...p.matchAll(/<w:t(?:\s[^>]*)?>([^<]*)<\/w:t>/g)];
+      return runs.map(r => r[1]).join('').trim();
+    }).filter(l => l.length > 0);
+  }
+
+  async function extractLinesFromFile(file) {
+    const ext = (file.name.match(/\.([^.]+)$/) || ['',''])[1].toLowerCase();
+    // Text simplu / CSV
+    if (!ext || /^(txt|csv|tsv|text)$/.test(ext) || file.type.startsWith('text/')) {
+      const text = await file.text();
+      return text.split(/[\r\n]+/).map(l => l.replace(/^[;\t,\s]+|[;\t,\s]+$/g, '').trim()).filter(l => l.length > 1);
+    }
+    // Formate ZIP (docx, xlsx, odt, ods)
+    if (/^(docx|xlsx|xls|odt|ods|pptx)$/.test(ext)) {
+      const entries = await readZipEntries(file).catch(() => null);
+      if (entries) {
+        // DOCX → word/document.xml → paragrafe
+        if (entries['word/document.xml']) return docxParagraphs(entries['word/document.xml']);
+        // XLSX → xl/sharedStrings.xml → stringuri
+        if (entries['xl/sharedStrings.xml']) return xmlToLines(entries['xl/sharedStrings.xml'], 't');
+        // ODT / ODS → content.xml
+        if (entries['content.xml']) return xmlToLines(entries['content.xml'], 'text:p|text:h|table:table-cell');
+      }
+    }
+    // Fallback: încearcă ca text plain
+    try {
+      const text = await file.text();
+      const lines = text.split(/[\r\n]+/).map(l => l.trim()).filter(l => l.length > 1 && !/[\x00-\x08\x0E-\x1F]/.test(l));
+      if (lines.length > 0) return lines;
+    } catch(_) {}
+    return null;
+  }
+
+  // Preview modal
+  let importPreviewLines = [];
+
+  function openImportPreview(lines) {
+    importPreviewLines = lines;
+    const c = $('import-preview-list'); c.innerHTML = '';
+    lines.forEach((line, idx) => {
+      const row = document.createElement('div');
+      row.className = 'preview-item-row';
+      row.innerHTML = `<input type="checkbox" id="ipl-${idx}" checked><label for="ipl-${idx}">${escapeHtml(line)}</label>`;
+      c.appendChild(row);
+    });
+    $('import-preview-error').textContent = '';
+    $('modal-import-preview').classList.add('open');
+  }
+
+  function closeImportPreview() { $('modal-import-preview').classList.remove('open'); }
+
+  function confirmImportPreview() {
+    const selected = importPreviewLines.filter((_, i) => { const cb = document.getElementById('ipl-' + i); return cb && cb.checked; });
+    if (selected.length === 0) { $('import-preview-error').textContent = 'Selectează cel puțin un articol'; return; }
+    closeImportPreview();
+    selected.forEach(name => items.push({ id: uid(), name, qty: 1, unit: '', price: 0, checked: false }));
+    save(); render();
+    toast(`${selected.length} articole importate`);
+  }
+
+  async function handleOfflineFileImport(file) {
+    setCloudStatus(cloudCfg ? 'syncing' : 'off', '⏳ Procesare…');
+    try {
+      const lines = await extractLinesFromFile(file);
+      setCloudStatus(cloudCfg ? 'synced' : 'off');
+      if (lines && lines.length > 0) { openImportPreview(lines); }
+      else { toast('Nu s-au putut extrage articole din fișier. Încearcă să copiezi și lipești textul.'); }
+    } catch(e) { setCloudStatus(cloudCfg ? 'error' : 'off'); toast('Eroare la procesarea fișierului.'); }
+  }
+
+  // ============ FORMULAR OFFLINE ============
+  let offlineEditingId = null;
+
+  function openOfflineForm(prefillId = null) {
+    const form = $('offline-form'), toggle = $('toggle-offline-form'), label = $('toggle-offline-label');
+    form.style.display = ''; toggle.classList.add('open');
+    offlineEditingId = prefillId;
+    if (prefillId) {
+      const it = items.find(x => x.id === prefillId);
+      if (it) {
+        $('of-name').value = it.name || '';
+        $('of-qty').value = it.qty || 1;
+        $('of-unit').value = it.unit || '';
+        $('of-price').value = it.price || '';
+        label.textContent = '✎ Editezi produs';
+        $('offline-form-submit').textContent = 'Salvează';
+      }
+    } else {
+      label.textContent = '× Închide formular';
+      $('offline-form-submit').textContent = 'Adaugă';
+    }
+    $('of-name').focus();
+  }
+
+  function closeOfflineForm() {
+    const form = $('offline-form'), toggle = $('toggle-offline-form'), label = $('toggle-offline-label');
+    form.style.display = 'none'; toggle.classList.remove('open');
+    form.reset(); $('of-qty').value = 1;
+    offlineEditingId = null;
+    label.textContent = '+ Adaugă produs';
+    $('offline-form-submit').textContent = 'Adaugă';
+  }
+
+  function submitOfflineForm(e) {
+    e.preventDefault();
+    const name  = $('of-name').value.trim();
+    const qty   = parseInt($('of-qty').value, 10) || 1;
+    const unit  = $('of-unit').value.trim();
+    const price = parseFloat($('of-price').value) || 0;
+    if (!name) { toast('Introdu denumirea produsului'); return; }
+    const data = { name, qty, unit, price };
+    if (offlineEditingId) {
+      const idx = items.findIndex(x => x.id === offlineEditingId);
+      if (idx !== -1) items[idx] = { ...items[idx], ...data };
+      toast('Produs actualizat');
+    } else {
+      items.push({ id: uid(), ...data, checked: false });
+      toast('Produs adăugat');
+    }
+    save(); render(); closeOfflineForm();
   }
 
   // ============ EXPORT / IMPORT ============
@@ -1174,9 +1573,37 @@
       if (ok) { items = []; save(); render(); toast('Listă golită'); }
     });
 
-    // Navigare liste
-    $('btn-back').addEventListener('click', backToHome);
-    $('btn-new-list').addEventListener('click', promptNewList);
+    // Navigare
+    $('btn-back').addEventListener('click', () => {
+      if (activeView === 'archive') backToHome();
+      else backToHome();
+    });
+    $('btn-new-online').addEventListener('click', promptNewOnlineList);
+    $('btn-new-offline').addEventListener('click', promptNewOfflineList);
+    $('btn-go-archive').addEventListener('click', goToArchive);
+
+    // Import fișier offline
+    $('btn-import-file-offline').addEventListener('click', () => $('file-input-offline').click());
+    $('file-input-offline').addEventListener('change', e => {
+      const f = e.target.files[0]; if (f) handleOfflineFileImport(f); e.target.value = '';
+    });
+    $('import-preview-cancel').addEventListener('click', closeImportPreview);
+    $('import-preview-ok').addEventListener('click', confirmImportPreview);
+    $('modal-import-preview').addEventListener('click', e => { if (e.target === $('modal-import-preview')) closeImportPreview(); });
+    $('preview-select-all').addEventListener('click', () => {
+      document.querySelectorAll('#import-preview-list input[type=checkbox]').forEach(cb => cb.checked = true);
+    });
+    $('preview-deselect-all').addEventListener('click', () => {
+      document.querySelectorAll('#import-preview-list input[type=checkbox]').forEach(cb => cb.checked = false);
+    });
+
+    // Formular offline
+    $('toggle-offline-form').addEventListener('click', () => {
+      if ($('toggle-offline-form').classList.contains('open')) closeOfflineForm();
+      else openOfflineForm();
+    });
+    $('offline-form-cancel').addEventListener('click', closeOfflineForm);
+    $('offline-form').addEventListener('submit', submitOfflineForm);
 
     // Modal nume
     $('name-modal-cancel').addEventListener('click', closeNameModal);
