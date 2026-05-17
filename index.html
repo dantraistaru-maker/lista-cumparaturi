@@ -347,6 +347,14 @@
       <span class="icon">🗑</span><span>Golește</span>
     </button>
   </div>
+  <div id="footer-archived-list-bar" style="display:none; grid-column:1/-1; gap:6px;">
+    <button class="footer-btn" id="btn-restore-current" type="button" style="flex:1; color:#059669;">
+      <span class="icon">↩</span><span>Restaurează</span>
+    </button>
+    <button class="footer-btn" id="btn-export-archived" type="button" style="flex:1;">
+      <span class="icon">⇩</span><span>Export</span>
+    </button>
+  </div>
   <div id="footer-archive-bar" style="display:none; grid-column:1/-1; gap:6px;">
     <button class="footer-btn" id="btn-back-archive" type="button" style="flex:1; background:#f3f4f6;">
       <span class="icon">🏠</span><span>Înapoi la liste</span>
@@ -824,9 +832,10 @@
     $('toggle-form').style.display  = 'none';
     $('btn-back').style.display     = 'none';
     $('total-box').style.display    = 'none';
-    $('footer-home-bar').style.display    = 'none';
-    $('footer-list-bar').style.display    = 'none';
-    $('footer-archive-bar').style.display = 'none';
+    $('footer-home-bar').style.display          = 'none';
+    $('footer-list-bar').style.display          = 'none';
+    $('footer-archive-bar').style.display       = 'none';
+    $('footer-archived-list-bar').style.display = 'none';
     $('main-footer').style.display  = 'none';
   }
 
@@ -849,6 +858,8 @@
           <button class="icon-btn restore" data-action="restore" title="Restaurează">↩</button>
           <button class="icon-btn" data-action="del" title="Șterge definitiv">✕</button>
         </div>`;
+      card.querySelector('.list-card-body').addEventListener('click', () => openList(lst.id));
+      card.querySelector('.list-card-total').addEventListener('click', () => openList(lst.id));
       card.querySelector('[data-action="restore"]').addEventListener('click', e => { e.stopPropagation(); restoreList(lst.id); });
       card.querySelector('[data-action="del"]').addEventListener('click', e => { e.stopPropagation(); promptDeleteList(lst.id); });
     } else {
@@ -914,14 +925,22 @@
     $('main-footer').style.display        = '';
     $('btn-back').style.display           = 'inline-flex';
     $('total-box').style.display          = '';
-    $('footer-list-bar').style.display    = 'flex';
     const lst = allLists.find(l => l.id === activeListId);
-    $('header-h1').textContent = '🛒 ' + (lst ? lst.name : '');
+    const isArchived = lst && lst.status === 'archived';
 
-    // Afișează formularul corect
+    if (isArchived) {
+      $('footer-archived-list-bar').style.display = 'flex';
+      $('toggle-form').style.display = 'none';  // nu poți adăuga produse în arhivă
+      $('header-h1').textContent = '🗄 ' + (lst ? lst.name : '');
+    } else {
+      $('footer-list-bar').style.display = 'flex';
+      $('header-h1').textContent = '🛒 ' + (lst ? lst.name : '');
+    }
+
+    // Afișează formularul corect (doar pentru liste active)
     const isOffline = lst && lst.type === 'offline';
-    $('online-form-wrapper').style.display = isOffline ? 'none' : '';
-    $('offline-form-wrapper').style.display = isOffline ? '' : 'none';
+    $('online-form-wrapper').style.display = (!isArchived && !isOffline) ? '' : 'none';
+    $('offline-form-wrapper').style.display = (!isArchived && isOffline)  ? '' : 'none';
 
     const listEl = $('list'), empty = $('empty-state');
     $('count-total').textContent   = items.length;
@@ -1802,8 +1821,15 @@
     });
 
     // Navigare
-    $('btn-back').addEventListener('click', backToHome);
+    $('btn-back').addEventListener('click', () => {
+      // Dacă suntem în lista arhivată, revenim la arhivă, nu la home
+      const lst = activeListId ? allLists.find(l => l.id === activeListId) : null;
+      if (lst && lst.status === 'archived') { activeListId = null; activeView = 'archive'; render(); }
+      else backToHome();
+    });
     $('btn-back-archive').addEventListener('click', backToHome);
+    $('btn-restore-current').addEventListener('click', () => { if (activeListId) restoreList(activeListId); });
+    $('btn-export-archived').addEventListener('click', showExportSheet);
     $('btn-new-online').addEventListener('click', promptNewOnlineList);
     $('btn-new-offline').addEventListener('click', promptNewOfflineList);
     $('btn-go-archive').addEventListener('click', goToArchive);
