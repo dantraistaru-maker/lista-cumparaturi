@@ -812,7 +812,7 @@
     $('list-view').style.display = 'none';
     $('main-footer').style.display = 'none';
     $('footer-archive-bar').style.display = 'none';
-    $('footer-list-bar').style.display = '';
+    $('footer-list-bar').style.display = 'contents';
   }
 
   function makeListCard(lst, isArchive) {
@@ -882,10 +882,10 @@
   function renderArchiveView() {
     setHeaderForHome('🗄 Arhivă');
     $('archive-view').style.display = '';
-    $('btn-back').style.display = '';
+    $('btn-back').style.display = 'inline-flex';
     $('main-footer').style.display = '';
     // Footer arhivă: doar butonul Acasă pe toată lățimea
-    $('footer-archive-bar').style.display = '';
+    $('footer-archive-bar').style.display = 'block';
     $('footer-list-bar').style.display = 'none';
     const archived = allLists.filter(l => l.status === 'archived');
     renderSection('archive-cards-online', archived.filter(l => l.type !== 'offline'), true);
@@ -897,9 +897,9 @@
     $('archive-view').style.display = 'none';
     $('list-view').style.display = '';
     $('main-footer').style.display = '';
-    $('btn-back').style.display = '';
+    $('btn-back').style.display = 'inline-flex';
     $('footer-archive-bar').style.display = 'none';
-    $('footer-list-bar').style.display = '';
+    $('footer-list-bar').style.display = 'contents';
     const lst = allLists.find(l => l.id === activeListId);
     $('header-h1').textContent = '🛒 ' + (lst ? lst.name : '');
     $('total-box').style.display = '';
@@ -1376,7 +1376,10 @@
     let incomingLists = [];
     if (data && Array.isArray(data.lists)) {
       incomingLists = data.lists.map(l => ({
-        id: l.id || uid(), name: l.name || 'Import',
+        id: l.id || uid(),
+        name: l.name || 'Import',
+        type: l.type || 'online',
+        status: l.status || 'active',
         items: normalizeIncoming(l.items || [])
       }));
     } else {
