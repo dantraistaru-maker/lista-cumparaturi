@@ -488,8 +488,18 @@
     } catch(e) { allLists = []; }
   }
   function saveLists() {
-    try { localStorage.setItem(LISTS_KEY, JSON.stringify(allLists)); }
-    catch(e) { toast('Eroare la salvare!'); }
+    try {
+      localStorage.setItem(LISTS_KEY, JSON.stringify(allLists));
+      // Backup automat rotativ — 3 copii independente de cloud
+      const active = allLists.filter(l => l.status === 'active');
+      if (active.some(l => l.items.length > 0)) {
+        const snap = JSON.stringify({ savedAt: new Date().toISOString(), lists: allLists });
+        const b1 = localStorage.getItem('lista-backup-1');
+        const b2 = localStorage.getItem('lista-backup-2');
+        if (b1) localStorage.setItem('lista-backup-2', b2 || b1);
+        localStorage.setItem('lista-backup-1', snap);
+      }
+    } catch(e) { toast('Eroare la salvare!'); }
   }
   function save() {
     if (activeListId) {
@@ -1522,8 +1532,10 @@
 
   function recoverOldData() {
     const sources = [
-      { key: 'lista-cumparaturi-v2', label: 'sesiunea anterioară (v2)', isV2: true },
-      { key: 'lista-dedeman-v1',     label: 'versiunea originală (v1)', isV1: true },
+      { key: 'lista-backup-1',       label: 'backup automat (cel mai recent)', isBackup: true },
+      { key: 'lista-backup-2',       label: 'backup automat (anterior)',        isBackup: true },
+      { key: 'lista-cumparaturi-v2', label: 'sesiunea anterioară (v2)',         isV2: true },
+      { key: 'lista-dedeman-v1',     label: 'versiunea originală (v1)',         isV1: true },
     ];
     let found = null, foundLabel = '', foundKey = '';
     for (const s of sources) {
@@ -1531,6 +1543,14 @@
         const raw = localStorage.getItem(s.key);
         if (!raw) continue;
         const parsed = JSON.parse(raw);
+        if (s.isBackup && parsed.lists && Array.isArray(parsed.lists) && parsed.lists.length > 0) {
+          const active = parsed.lists.filter(l => l.status === 'active' && l.items.length > 0);
+          if (active.length === 0) continue;
+          found = parsed.lists.map(l => ({ ...l, type: l.type || 'online', status: l.status || 'active' }));
+          const d = new Date(parsed.savedAt).toLocaleString('ro-RO');
+          const total = found.reduce((s, l) => s + l.items.length, 0);
+          foundLabel = `${found.length} liste (${total} produse) — ${s.label} din ${d}`; foundKey = s.key; break;
+        }
         if (s.isV1 && Array.isArray(parsed) && parsed.length > 0) {
           found = [{ id: uid(), name: 'Lista recuperată', type: 'online', status: 'active', items: parsed }];
           foundLabel = `${parsed.length} produse din ${s.label}`; foundKey = s.key; break;
