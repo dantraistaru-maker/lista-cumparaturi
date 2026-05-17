@@ -57,29 +57,29 @@
   .preview-name { font-size: 13px; font-weight: 600; color: #166534; word-wrap: break-word; }
   .preview-price { font-size: 12px; color: #15803d; margin-top: 2px; }
 
-  .list { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .list { padding: 8px 12px; display: flex; flex-direction: column; gap: 6px; }
   .empty { text-align: center; padding: 60px 20px; color: #9ca3af; font-size: 14px; }
   .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
 
-  .item { background: white; border-radius: 12px; padding: 12px; display: grid; grid-template-columns: 72px 1fr auto; gap: 12px; align-items: start; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: opacity 0.2s; }
-  .item.checked { opacity: 0.55; }
+  .item { background: white; border-radius: 10px; padding: 10px; display: grid; grid-template-columns: 60px 1fr auto; gap: 10px; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: opacity 0.2s; }
+  .item.checked { opacity: 0.5; }
   .item.checked .item-name, .item.checked .item-subtotal { text-decoration: line-through; }
 
-  .item-img { width: 72px; height: 72px; border-radius: 8px; object-fit: cover; background: #f3f4f6; border: 1px solid #e5e7eb; }
-  .item-img.placeholder { display: flex; align-items: center; justify-content: center; font-size: 24px; color: #d1d5db; }
+  .item-img { width: 60px; height: 60px; border-radius: 7px; object-fit: cover; background: #f3f4f6; border: 1px solid #e5e7eb; }
+  .item-img.placeholder { display: flex; align-items: center; justify-content: center; font-size: 22px; color: #d1d5db; }
 
   .item-body { min-width: 0; }
-  .item-name { font-size: 14px; font-weight: 600; color: #1f2937; margin-bottom: 6px; word-wrap: break-word; }
-  .item-meta { font-size: 12px; color: #6b7280; margin-bottom: 6px; }
-  .item-subtotal { font-size: 15px; font-weight: 700; color: #EE7203; margin-bottom: 6px; }
-  .item-link { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #2563eb; text-decoration: none; padding: 4px 8px; background: #eff6ff; border-radius: 6px; font-weight: 600; }
+  .item-name { font-size: 13px; font-weight: 600; color: #1f2937; margin-bottom: 3px; word-wrap: break-word; }
+  .item-meta { font-size: 11px; color: #6b7280; margin-bottom: 3px; }
+  .item-subtotal { font-size: 14px; font-weight: 700; color: #EE7203; margin-bottom: 4px; }
+  .item-link { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: #2563eb; text-decoration: none; padding: 3px 7px; background: #eff6ff; border-radius: 5px; font-weight: 600; }
   .item-link:active { background: #dbeafe; }
 
-  .item-actions { display: flex; flex-direction: column; gap: 8px; align-items: center; }
-  .check-btn { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #d1d5db; background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; color: transparent; transition: all 0.15s; touch-action: manipulation; }
+  .item-actions { display: flex; flex-direction: row; gap: 4px; align-items: center; }
+  .check-btn { width: 38px; height: 38px; border-radius: 50%; border: 2px solid #d1d5db; background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; color: transparent; transition: all 0.15s; touch-action: manipulation; flex-shrink: 0; }
   .check-btn.checked { background: #10b981; border-color: #10b981; color: white; }
   .check-btn:active { transform: scale(0.9); }
-  .icon-btn { width: 40px; height: 40px; border-radius: 8px; border: none; background: transparent; cursor: pointer; font-size: 18px; color: #9ca3af; display: flex; align-items: center; justify-content: center; touch-action: manipulation; }
+  .icon-btn { width: 34px; height: 34px; border-radius: 7px; border: none; background: transparent; cursor: pointer; font-size: 16px; color: #9ca3af; display: flex; align-items: center; justify-content: center; touch-action: manipulation; flex-shrink: 0; }
   .icon-btn:active { background: #f3f4f6; color: #ef4444; transform: scale(0.9); }
   .icon-btn.edit:active { color: #2563eb; }
 
@@ -124,8 +124,8 @@
 
   /* ── Multi-list home ── */
   .header-left { display:flex; align-items:center; flex:1; min-width:0; }
-  .btn-back { display:none; background:rgba(255,255,255,0.2); border:none; color:white; font-size:26px; font-weight:300; line-height:1; cursor:pointer; padding:2px 10px 4px 4px; border-radius:8px; touch-action:manipulation; min-width:36px; min-height:36px; flex-shrink:0; }
-  .btn-back:active { background:rgba(255,255,255,0.35); }
+  .btn-back { display:none; background:rgba(255,255,255,0.22); border:none; color:white; font-size:13px; font-weight:700; line-height:1; cursor:pointer; padding:6px 10px; border-radius:8px; touch-action:manipulation; min-height:36px; flex-shrink:0; white-space:nowrap; }
+  .btn-back:active { background:rgba(255,255,255,0.4); }
 
   .home-view { padding:12px; display:flex; flex-direction:column; gap:10px; }
   .section-header { font-size:11px; font-weight:800; color:#9ca3af; text-transform:uppercase; letter-spacing:1px; padding:6px 2px 4px; margin-top:6px; }
@@ -147,7 +147,7 @@
   .home-empty-section { text-align:center; padding:16px 12px; color:#d1d5db; font-size:13px; background:white; border-radius:12px; border:1px dashed #e5e7eb; }
 
   /* item offline (fara imagine) */
-  .item.offline-item { grid-template-columns: 1fr auto; }
+  .item.offline-item { grid-template-columns: 1fr auto; padding: 10px; }
 
   /* arhiva – buton restore */
   .icon-btn.restore { color: #059669; }
@@ -173,7 +173,7 @@
 <header>
   <div class="header-row">
     <div class="header-left">
-      <button class="btn-back" id="btn-back" type="button">‹</button>
+      <button class="btn-back" id="btn-back" type="button">← Acasă</button>
       <div>
         <h1 id="header-h1">🛒 Lista Cumpărături Online</h1>
         <div class="stats" id="header-stats">
@@ -323,20 +323,46 @@
 
 </div><!-- /list-view -->
 
-<footer id="main-footer">
-  <button class="footer-btn" id="btn-reset" type="button">
-    <span class="icon">↺</span><span>Reset bifări</span>
-  </button>
-  <button class="footer-btn" id="btn-export" type="button">
-    <span class="icon">⇩</span><span>Export</span>
-  </button>
-  <button class="footer-btn" id="btn-import" type="button">
-    <span class="icon">⇧</span><span>Import</span>
-  </button>
-  <button class="footer-btn danger" id="btn-clear" type="button">
-    <span class="icon">🗑</span><span>Goleste tot</span>
-  </button>
+<footer id="main-footer" style="display:none;">
+  <div id="footer-list-bar" style="display:contents;">
+    <button class="footer-btn" id="btn-reset" type="button">
+      <span class="icon">↺</span><span>Reset</span>
+    </button>
+    <button class="footer-btn" id="btn-export" type="button">
+      <span class="icon">⇩</span><span>Export</span>
+    </button>
+    <button class="footer-btn" id="btn-import" type="button">
+      <span class="icon">⇧</span><span>Import</span>
+    </button>
+    <button class="footer-btn danger" id="btn-clear" type="button">
+      <span class="icon">🗑</span><span>Golește</span>
+    </button>
+  </div>
+  <div id="footer-archive-bar" style="display:none; grid-column:1/-1;">
+    <button class="footer-btn" id="btn-back-archive" type="button" style="width:100%; background:#f3f4f6;">
+      <span class="icon">🏠</span><span>Înapoi la liste</span>
+    </button>
+  </div>
 </footer>
+
+<div id="export-sheet" style="display:none; position:fixed; top:0; right:0; bottom:0; left:0; z-index:150; background:rgba(0,0,0,0.5);">
+  <div style="position:absolute; bottom:0; left:0; right:0; background:white; border-radius:18px 18px 0 0; padding:20px 16px; padding-bottom:20px;">
+    <div style="font-size:15px; font-weight:700; color:#111; margin-bottom:16px; text-align:center;">Exportă listele</div>
+    <button id="export-btn-text" type="button" style="width:100%;padding:14px;margin-bottom:10px;font-size:15px;font-weight:600;border:1px solid #e5e7eb;border-radius:10px;background:white;cursor:pointer;display:flex;align-items:center;gap:12px;touch-action:manipulation;">
+      <span style="font-size:22px;">📋</span>
+      <div style="text-align:left;"><div>Text simplu (.txt)</div><div style="font-size:12px;font-weight:400;color:#6b7280;">Poate fi trimis pe WhatsApp, email, printat</div></div>
+    </button>
+    <button id="export-btn-csv" type="button" style="width:100%;padding:14px;margin-bottom:10px;font-size:15px;font-weight:600;border:1px solid #e5e7eb;border-radius:10px;background:white;cursor:pointer;display:flex;align-items:center;gap:12px;touch-action:manipulation;">
+      <span style="font-size:22px;">📊</span>
+      <div style="text-align:left;"><div>Excel / CSV (.csv)</div><div style="font-size:12px;font-weight:400;color:#6b7280;">Se deschide direct în Excel sau Google Sheets</div></div>
+    </button>
+    <button id="export-btn-json" type="button" style="width:100%;padding:14px;margin-bottom:16px;font-size:15px;font-weight:600;border:1px solid #e5e7eb;border-radius:10px;background:white;cursor:pointer;display:flex;align-items:center;gap:12px;touch-action:manipulation;">
+      <span style="font-size:22px;">💾</span>
+      <div style="text-align:left;"><div>Backup complet (.json)</div><div style="font-size:12px;font-weight:400;color:#6b7280;">Reimport în aplicație, pe alt dispozitiv</div></div>
+    </button>
+    <button id="export-sheet-cancel" type="button" style="width:100%;padding:14px;font-size:15px;font-weight:600;border:none;border-radius:10px;background:#f3f4f6;cursor:pointer;touch-action:manipulation;">Renunță</button>
+  </div>
+</div>
 
 <div id="import-sheet" style="display:none; position:fixed; top:0; right:0; bottom:0; left:0; z-index:150; background:rgba(0,0,0,0.5);">
   <div style="position:absolute; bottom:0; left:0; right:0; background:white; border-radius:18px 18px 0 0; padding:20px 16px; padding-bottom:20px;">
@@ -785,6 +811,8 @@
     $('archive-view').style.display = 'none';
     $('list-view').style.display = 'none';
     $('main-footer').style.display = 'none';
+    $('footer-archive-bar').style.display = 'none';
+    $('footer-list-bar').style.display = '';
   }
 
   function makeListCard(lst, isArchive) {
@@ -855,6 +883,10 @@
     setHeaderForHome('🗄 Arhivă');
     $('archive-view').style.display = '';
     $('btn-back').style.display = '';
+    $('main-footer').style.display = '';
+    // Footer arhivă: doar butonul Acasă pe toată lățimea
+    $('footer-archive-bar').style.display = '';
+    $('footer-list-bar').style.display = 'none';
     const archived = allLists.filter(l => l.status === 'archived');
     renderSection('archive-cards-online', archived.filter(l => l.type !== 'offline'), true);
     renderSection('archive-cards-offline', archived.filter(l => l.type === 'offline'), true);
@@ -866,6 +898,8 @@
     $('list-view').style.display = '';
     $('main-footer').style.display = '';
     $('btn-back').style.display = '';
+    $('footer-archive-bar').style.display = 'none';
+    $('footer-list-bar').style.display = '';
     const lst = allLists.find(l => l.id === activeListId);
     $('header-h1').textContent = '🛒 ' + (lst ? lst.name : '');
     $('total-box').style.display = '';
@@ -1234,47 +1268,97 @@
   }
 
   // ============ EXPORT / IMPORT ============
-  function buildExportPayload() {
-    return JSON.stringify({ version: 2, exportedAt: new Date().toISOString(), lists: allLists }, null, 2);
-  }
+  const activeLists = () => allLists.filter(l => l.status === 'active');
 
-  async function exportJson() {
-    if (allLists.length === 0) { toast('Nu ai nicio listă de exportat'); return; }
-    const json = buildExportPayload();
-    const date = new Date().toISOString().slice(0, 10);
-    const filename = `lista-cumparaturi-${date}.json`;
-
-    // Pe mobil, încearcă Web Share API cu fișier
-    if (navigator.share && navigator.canShare) {
-      try {
-        const blob = new Blob([json], { type: 'application/json' });
-        const file = new File([blob], filename, { type: 'application/json' });
-        if (navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: 'Lista Cumpărături Online' });
-          return;
-        }
-      } catch (e) {
-        if (e.name === 'AbortError') return;
-        // fall through la share text
-      }
-      // Dacă nu poate partaja fișier, încearcă share text
-      try {
-        await navigator.share({ title: 'Lista Cumpărături Online', text: json });
-        return;
-      } catch (e) {
-        if (e.name === 'AbortError') return;
-      }
-    }
-
-    // Fallback: descarcă fișier
-    const blob = new Blob([json], { type: 'application/json' });
+  function downloadFile(content, filename, mime) {
+    const bom = mime.includes('csv') ? '﻿' : '';
+    const blob = new Blob([bom + content], { type: mime });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = filename;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toast('Listă exportată');
   }
+
+  async function shareOrDownload(content, filename, mime, shareTitle) {
+    if (navigator.share) {
+      try {
+        const blob = new Blob([content], { type: mime });
+        const file = new File([blob], filename, { type: mime });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: shareTitle }); return;
+        }
+        await navigator.share({ title: shareTitle, text: content }); return;
+      } catch(e) { if (e.name === 'AbortError') return; }
+    }
+    downloadFile(content, filename, mime);
+  }
+
+  function exportAsText() {
+    hideExportSheet();
+    if (activeLists().length === 0) { toast('Nu ai liste active de exportat'); return; }
+    const date = new Date().toLocaleDateString('ro-RO', { day:'2-digit', month:'2-digit', year:'numeric' });
+    let out = `LISTA CUMPĂRĂTURI  –  ${date}\n${'='.repeat(40)}\n\n`;
+    activeLists().forEach(lst => {
+      const total = lst.items.reduce((s, i) => s + (i.price||0)*(i.qty||0), 0);
+      out += `[ ${lst.name.toUpperCase()} ]\n${'-'.repeat(36)}\n`;
+      if (lst.items.length === 0) { out += '  (goală)\n'; }
+      lst.items.forEach(i => {
+        const chk = i.checked ? '[x]' : '[ ]';
+        const unit = i.unit || 'buc';
+        const sub  = (i.price||0) * (i.qty||0);
+        const priceStr = i.price ? ` – ${fmt(i.price)} lei/buc` : '';
+        const totStr   = sub > 0 ? ` = ${fmt(sub)} lei` : '';
+        out += `  ${chk} ${i.name}  (${i.qty} ${unit}${priceStr}${totStr})\n`;
+      });
+      if (total > 0) out += `\n  Total: ${fmt(total)} lei\n`;
+      out += '\n';
+    });
+    const filename = `lista-cumparaturi-${new Date().toISOString().slice(0,10)}.txt`;
+    shareOrDownload(out, filename, 'text/plain', 'Lista Cumpărături');
+    toast('Export text realizat');
+  }
+
+  function exportAsCsv() {
+    hideExportSheet();
+    if (activeLists().length === 0) { toast('Nu ai liste active de exportat'); return; }
+    const rows = [['Lista', 'Produs', 'Cantitate', 'Unitate', 'Pret (lei)', 'Total (lei)', 'Cumparat']];
+    activeLists().forEach(lst => {
+      lst.items.forEach(i => {
+        const unit = i.unit || (lst.type === 'offline' ? '' : 'buc');
+        const sub  = ((i.price||0) * (i.qty||0)).toFixed(2);
+        rows.push([
+          lst.name,
+          i.name,
+          i.qty,
+          unit,
+          (i.price||0).toFixed(2),
+          sub,
+          i.checked ? 'Da' : 'Nu'
+        ]);
+      });
+    });
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+    const filename = `lista-cumparaturi-${new Date().toISOString().slice(0,10)}.csv`;
+    downloadFile(csv, filename, 'text/csv;charset=utf-8');
+    toast('Export CSV realizat — deschide cu Excel');
+  }
+
+  function exportAsJson() {
+    hideExportSheet();
+    if (allLists.length === 0) { toast('Nu ai liste de exportat'); return; }
+    const json = JSON.stringify({ version: 2, exportedAt: new Date().toISOString(), lists: allLists }, null, 2);
+    const filename = `lista-cumparaturi-backup-${new Date().toISOString().slice(0,10)}.json`;
+    shareOrDownload(json, filename, 'application/json', 'Backup Liste');
+    toast('Backup JSON exportat');
+  }
+
+  function showExportSheet() {
+    if (allLists.filter(l=>l.status==='active').length === 0) { toast('Nu ai liste active'); return; }
+    $('export-sheet').style.display = 'block';
+  }
+  function hideExportSheet() { $('export-sheet').style.display = 'none'; }
 
   function normalizeIncoming(incoming) {
     return incoming.map(x => ({
@@ -1635,10 +1719,8 @@
     });
 
     // Navigare
-    $('btn-back').addEventListener('click', () => {
-      if (activeView === 'archive') backToHome();
-      else backToHome();
-    });
+    $('btn-back').addEventListener('click', backToHome);
+    $('btn-back-archive').addEventListener('click', backToHome);
     $('btn-new-online').addEventListener('click', promptNewOnlineList);
     $('btn-new-offline').addEventListener('click', promptNewOfflineList);
     $('btn-go-archive').addEventListener('click', goToArchive);
@@ -1682,7 +1764,12 @@
     $('cloud-copy-hint').addEventListener('click', copyBinId);
     $('cloud-modal-recover').addEventListener('click', recoverOldData);
 
-    $('btn-export').addEventListener('click', exportJson);
+    $('btn-export').addEventListener('click', showExportSheet);
+    $('export-btn-text').addEventListener('click', exportAsText);
+    $('export-btn-csv').addEventListener('click', exportAsCsv);
+    $('export-btn-json').addEventListener('click', exportAsJson);
+    $('export-sheet-cancel').addEventListener('click', hideExportSheet);
+    $('export-sheet').addEventListener('click', e => { if (e.target === $('export-sheet')) hideExportSheet(); });
 
     // Import sheet
     $('btn-import').addEventListener('click', showImportSheet);
