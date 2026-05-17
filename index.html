@@ -1371,12 +1371,13 @@
 
   function normalizeIncoming(incoming) {
     return incoming.map(x => ({
-      id: x.id || uid(),
-      url: x.url || '',
-      img: x.img || '',
-      name: x.name || '(fără nume)',
-      price: parseFloat(x.price) || 0,
-      qty: parseInt(x.qty, 10) || 1,
+      id:      x.id || uid(),
+      url:     x.url || '',
+      img:     x.img || '',
+      name:    x.name || '(fără nume)',
+      price:   parseFloat(x.price) || 0,
+      qty:     parseInt(x.qty, 10) || 1,
+      unit:    x.unit || '',
       checked: !!x.checked,
     }));
   }
