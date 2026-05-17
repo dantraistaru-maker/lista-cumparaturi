@@ -440,6 +440,11 @@
       <button class="btn btn-secondary" id="cloud-modal-cancel" type="button">Închide</button>
       <button class="btn btn-primary" id="cloud-modal-save" type="button">Conectează</button>
     </div>
+    <!-- Butoane vizibile doar când e configurat -->
+    <div id="cloud-sync-actions" style="display:none; flex-direction:column; gap:8px; margin-top:8px;">
+      <button class="btn btn-primary" id="cloud-modal-push" type="button">↑ Trimite datele locale → cloud</button>
+      <button class="btn btn-secondary" id="cloud-modal-pull" type="button">↓ Preia datele din cloud → local</button>
+    </div>
     <button class="btn-disconnect" id="cloud-modal-disconnect" style="display:none;" type="button">✕ Dezactivează sincronizarea</button>
     <button type="button" id="cloud-modal-recover" style="width:100%;padding:12px;margin-top:8px;font-size:14px;font-weight:600;border:1px dashed #d97706;border-radius:8px;background:#fffbeb;color:#92400e;cursor:pointer;touch-action:manipulation;">🔄 Recuperează date din sesiunea anterioară</button>
   </div>
@@ -1408,7 +1413,7 @@
     if (ok) {
       allLists = incomingLists;
       if (activeListId) { const lst = allLists.find(l => l.id === activeListId); if (lst) items = [...lst.items]; else backToHome(); }
-      saveLists(); render();
+      saveLists(); schedulePush(); render();
       toast(`${incomingLists.length} liste importate`);
     }
   }
@@ -1555,13 +1560,46 @@
   }
 
   // ── Modal cloud ──
+  async function pushToCloud() {
+    if (!cloudCfg) return;
+    setModalStatus('loading', 'Se trimite la cloud…');
+    try {
+      await cloudWrite();
+      setModalStatus('success', '✓ Date locale trimise în cloud cu succes!');
+      setCloudStatus('synced');
+      setTimeout(closeCloudModal, 1800);
+    } catch(e) { setModalStatus('error', '✕ ' + e.message); }
+  }
+
+  async function pullFromCloud() {
+    if (!cloudCfg) return;
+    setModalStatus('loading', 'Se citește din cloud…');
+    try {
+      const record = await cloudRead();
+      if (!record) { setModalStatus('error', 'Bin-ul e gol'); return; }
+      let cloudLists = null;
+      if (Array.isArray(record.lists) && record.lists.length > 0) cloudLists = record.lists;
+      else if (Array.isArray(record.items) && record.items.length > 0)
+        cloudLists = [{ id: uid(), name: 'Lista principală', type: 'online', status: 'active', items: record.items }];
+      if (!cloudLists) { setModalStatus('error', 'Nicio listă găsită în cloud'); return; }
+      const ok = allLists.length === 0 ? true :
+        await confirmModal('Preia din cloud', `Cloud-ul are ${cloudLists.length} liste. Înlocuiești listele locale?`);
+      if (ok) { allLists = cloudLists; saveLists(); render(); }
+      setModalStatus('success', '✓ Date preluate din cloud!');
+      setCloudStatus('synced');
+      setTimeout(closeCloudModal, 1800);
+    } catch(e) { setModalStatus('error', '✕ ' + e.message); }
+  }
+
   function openCloudModal() {
     const configured = !!cloudCfg;
     $('cloud-api-key').value   = cloudCfg ? cloudCfg.apiKey : '';
     $('cloud-bin-id').value    = cloudCfg ? cloudCfg.binId  : '';
     $('cloud-bin-created').style.display      = configured ? 'block' : 'none';
     $('cloud-modal-disconnect').style.display = configured ? 'block' : 'none';
-    $('cloud-modal-save').textContent         = configured ? 'Actualizează' : 'Conectează';
+    $('cloud-sync-actions').style.display     = configured ? 'flex'  : 'none';
+    $('cloud-modal-save').style.display       = configured ? 'none'  : '';
+    $('cloud-modal-cancel').textContent       = configured ? 'Închide' : 'Renunță';
     if (configured) {
       $('cloud-bin-id-display').textContent = cloudCfg.binId;
     }
@@ -1775,6 +1813,8 @@
     $('cloud-modal-cancel').addEventListener('click', closeCloudModal);
     $('cloud-modal-save').addEventListener('click', saveCloudSetup);
     $('cloud-modal-disconnect').addEventListener('click', disconnectCloud);
+    $('cloud-modal-push').addEventListener('click', pushToCloud);
+    $('cloud-modal-pull').addEventListener('click', pullFromCloud);
     $('modal-cloud').addEventListener('click', e => { if (e.target === $('modal-cloud')) closeCloudModal(); });
     $('cloud-bin-id-display').addEventListener('click', copyBinId);
     $('cloud-copy-hint').addEventListener('click', copyBinId);
