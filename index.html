@@ -1234,7 +1234,7 @@
 
   function openOfflineForm(prefillId = null) {
     const form = $('offline-form'), toggle = $('toggle-offline-form'), label = $('toggle-offline-label');
-    form.style.display = ''; toggle.classList.add('open');
+    form.style.display = 'block'; toggle.classList.add('open');
     offlineEditingId = prefillId;
     if (prefillId) {
       const it = items.find(x => x.id === prefillId);
@@ -1242,7 +1242,7 @@
         $('of-name').value = it.name || '';
         $('of-qty').value = it.qty || 1;
         $('of-unit').value = it.unit || '';
-        $('of-price').value = it.price || '';
+        $('of-price').value = it.price > 0 ? it.price : '';
         label.textContent = '✎ Editezi produs';
         $('offline-form-submit').textContent = 'Salvează';
       }
@@ -1879,6 +1879,11 @@
   }
 
   document.addEventListener('DOMContentLoaded', init);
+
+  // Sincronizare la revenire în app (iOS PWA nu reîncarcă pagina la switch)
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && cloudCfg) cloudPullOnLoad();
+  });
 
 </script>
 
