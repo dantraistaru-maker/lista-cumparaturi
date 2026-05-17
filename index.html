@@ -1291,16 +1291,21 @@
   }
 
   async function shareOrDownload(content, filename, mime, shareTitle) {
-    if (navigator.share) {
+    // Încearcă Web Share cu fișier (funcționează pe mobile)
+    if (navigator.share && navigator.canShare) {
       try {
         const blob = new Blob([content], { type: mime });
         const file = new File([blob], filename, { type: mime });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: shareTitle }); return;
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: shareTitle });
+          return;
         }
-        await navigator.share({ title: shareTitle, text: content }); return;
-      } catch(e) { if (e.name === 'AbortError') return; }
+      } catch(e) {
+        if (e.name === 'AbortError') return;
+        // Orice altă eroare → fallback la download
+      }
     }
+    // Desktop sau mobile fără suport share → descarcă fișierul
     downloadFile(content, filename, mime);
   }
 
@@ -1325,7 +1330,7 @@
       out += '\n';
     });
     const filename = `lista-cumparaturi-${new Date().toISOString().slice(0,10)}.txt`;
-    shareOrDownload(out, filename, 'text/plain', 'Lista Cumpărături');
+    downloadFile(out, filename, 'text/plain');
     toast('Export text realizat');
   }
 
@@ -1359,7 +1364,7 @@
     if (allLists.length === 0) { toast('Nu ai liste de exportat'); return; }
     const json = JSON.stringify({ version: 2, exportedAt: new Date().toISOString(), lists: allLists }, null, 2);
     const filename = `lista-cumparaturi-backup-${new Date().toISOString().slice(0,10)}.json`;
-    shareOrDownload(json, filename, 'application/json', 'Backup Liste');
+    downloadFile(json, filename, 'application/json');
     toast('Backup JSON exportat');
   }
 
@@ -1394,9 +1399,9 @@
       }));
     } else {
       const rawItems = Array.isArray(data) ? data : (data && Array.isArray(data.items) ? data.items : []);
-      if (rawItems.length > 0) incomingLists = [{ id: uid(), name: 'Lista importată', items: normalizeIncoming(rawItems) }];
+      if (rawItems.length > 0) incomingLists = [{ id: uid(), name: 'Lista importată', type: 'online', status: 'active', items: normalizeIncoming(rawItems) }];
     }
-    if (incomingLists.length === 0) { toast('Niciun produs găsit'); return; }
+    if (incomingLists.length === 0) { toast('Niciun produs găsit în fișier'); return; }
     const totalItems = incomingLists.reduce((s, l) => s + l.items.length, 0);
     const ok = allLists.length === 0 ? true :
       await confirmModal('Import', `Importezi ${incomingLists.length} liste (${totalItems} produse total). Înlocuiești toate listele actuale?`);
@@ -1415,9 +1420,7 @@
       try {
         const text = reader.result;
         if (!text || text.trim() === '') { toast('Fișier gol'); return; }
-        const data = JSON.parse(text);
-        const incoming = Array.isArray(data) ? data : (data.items || []);
-        applyImport(incoming);
+        applyImport(JSON.parse(text));
       } catch (err) {
         toast('Fișier invalid (nu e JSON corect)');
       }
@@ -1691,17 +1694,6 @@
 
   // ============ INIT ============
   function init() {
-    try { _initBody(); }
-    catch(e) {
-      console.error('INIT ERROR:', e);
-      const bar = document.createElement('div');
-      bar.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#dc2626;color:white;padding:10px 14px;font-size:13px;z-index:9999;white-space:pre-wrap;word-break:break-all;';
-      bar.textContent = '⚠ Eroare JS în init(): ' + e.message + '\n' + (e.stack || '');
-      document.body.prepend(bar);
-    }
-  }
-
-  function _initBody() {
     loadCloudCfg();
     load();
     if (cloudCfg) {
