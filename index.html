@@ -1465,9 +1465,13 @@
   }
 
   // ============ CLOUD SYNC (JSONBin.io) ============
-  const CLOUD_CFG_KEY = 'lista-cloud-v1';
-  let cloudCfg = null;   // { apiKey, binId }
+  const CLOUD_CFG_KEY  = 'lista-cloud-v1';
+  const LAST_SYNC_KEY  = 'lista-last-sync';   // când am sincronizat ultima dată
+  let cloudCfg = null;
   let cloudPushTimer = null;
+
+  function getLastSyncTime()  { return localStorage.getItem(LAST_SYNC_KEY) || '1970-01-01T00:00:00Z'; }
+  function saveLastSyncTime(t){ localStorage.setItem(LAST_SYNC_KEY, t || new Date().toISOString()); }
 
   function loadCloudCfg() {
     try {
@@ -1530,7 +1534,9 @@
   }
 
   async function cloudWrite() {
-    await apiCall('PUT', '/' + cloudCfg.binId, { lists: allLists, updatedAt: new Date().toISOString() });
+    const now = new Date().toISOString();
+    await apiCall('PUT', '/' + cloudCfg.binId, { lists: allLists, updatedAt: now });
+    saveLastSyncTime(now);
   }
 
   function schedulePush() {
@@ -1560,11 +1566,15 @@
           cloudLists = [{ id: uid(), name: 'Lista principală', type: 'online', status: 'active', items: record.items }];
 
         if (cloudLists) {
-          if (allLists.filter(l => l.status === 'active').length === 0) {
-            // Local gol — preia din cloud
-            allLists = cloudLists; saveLists(); render();
+          const cloudTime = record.updatedAt || '1970-01-01T00:00:00Z';
+          const localEmpty = allLists.filter(l => l.status === 'active').length === 0;
+          // Preia din cloud dacă: local e gol SAU cloud e mai nou decât ultima sincronizare
+          if (localEmpty || cloudTime > getLastSyncTime()) {
+            allLists = cloudLists;
+            saveLists();
+            saveLastSyncTime(cloudTime);
+            render();
           }
-          // Dacă local are date, nu suprascrie automat — local are prioritate
         }
       }
       setCloudStatus('synced');
