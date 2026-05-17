@@ -1490,21 +1490,33 @@
   }
 
   async function apiCall(method, path, body) {
-    const resp = await fetch('https://api.jsonbin.io/v3/b' + path, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': cloudCfg.apiKey,
-        'X-Bin-Name': 'Lista Cumparaturi Online',
-      },
-      body: body ? JSON.stringify(body) : undefined,
-    });
-    if (!resp.ok) {
-      let msg = 'HTTP ' + resp.status;
-      try { const j = await resp.json(); msg = j.message || msg; } catch(_) {}
-      throw new Error(msg);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
+    try {
+      const resp = await fetch('https://api.jsonbin.io/v3/b' + path, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': cloudCfg.apiKey,
+          'X-Bin-Name': 'Lista Cumparaturi Online',
+        },
+        body: body ? JSON.stringify(body) : undefined,
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      if (!resp.ok) {
+        let msg = 'HTTP ' + resp.status;
+        if (resp.status === 401) msg = 'Master Key incorect';
+        else if (resp.status === 404) msg = 'Bin ID negăsit';
+        else { try { const j = await resp.json(); msg = j.message || msg; } catch(_) {} }
+        throw new Error(msg);
+      }
+      return resp.json();
+    } catch(e) {
+      clearTimeout(timer);
+      if (e.name === 'AbortError') throw new Error('Timeout — JSONBin.io nu răspunde (10s). Verifică conexiunea.');
+      throw e;
     }
-    return resp.json();
   }
 
   async function cloudCreate() {
@@ -1640,24 +1652,31 @@
         $('cloud-modal-save').textContent = 'Actualizează';
         setModalStatus('success', '✓ Bin creat! Notează Bin ID-ul pentru alte dispozitive.');
       } else {
-        setModalStatus('loading', 'Se verifică bin-ul…');
-        const record = await cloudRead();
-        if (record) {
-          if (Array.isArray(record.lists) && record.lists.length > 0) {
-            const ok = allLists.length === 0 ? true :
-              await confirmModal('Date în cloud', `Bin-ul are ${record.lists.length} liste. Înlocuiești listele locale?`);
-            if (ok) { allLists = record.lists; saveLists(); render(); }
-          } else if (Array.isArray(record.items) && record.items.length > 0) {
-            allLists = [{ id: uid(), name: 'Lista principală', items: record.items }];
-            saveLists(); render();
+        // Dacă avem date locale → le trimitem în cloud (fără să citim mai întâi)
+        // Dacă local e gol → citim din cloud
+        if (allLists.filter(l => l.status === 'active').length > 0) {
+          setModalStatus('loading', 'Se trimite la cloud…');
+          await cloudWrite();
+          persistCloudCfg();
+          setModalStatus('success', '✓ Conectat! Datele locale au fost trimise în cloud.');
+        } else {
+          setModalStatus('loading', 'Se preia din cloud…');
+          const record = await cloudRead();
+          if (record) {
+            if (Array.isArray(record.lists) && record.lists.length > 0) {
+              allLists = record.lists; saveLists(); render();
+            } else if (Array.isArray(record.items) && record.items.length > 0) {
+              allLists = [{ id: uid(), name: 'Lista principală', type:'online', status:'active', items: record.items }];
+              saveLists(); render();
+            }
           }
+          persistCloudCfg();
+          setModalStatus('success', '✓ Conectat! Date preluate din cloud.');
         }
-        persistCloudCfg();
         $('cloud-bin-id-display').textContent = binId;
         $('cloud-bin-created').style.display = 'block';
         $('cloud-modal-disconnect').style.display = 'block';
         $('cloud-modal-save').textContent = 'Actualizează';
-        setModalStatus('success', '✓ Conectat cu succes!');
       }
       setCloudStatus('synced');
       setTimeout(closeCloudModal, 2000);
