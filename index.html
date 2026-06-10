@@ -61,9 +61,11 @@
   .empty { text-align: center; padding: 60px 20px; color: #9ca3af; font-size: 14px; }
   .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
 
-  .item { background: white; border-radius: 10px; padding: 10px; display: grid; grid-template-columns: 60px 1fr auto; gap: 10px; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: opacity 0.2s; }
+  .item { background: white; border-radius: 10px; padding: 10px; display: grid; grid-template-columns: 22px 60px 1fr auto; gap: 10px; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: opacity 0.2s; }
   .item.checked { opacity: 0.5; }
   .item.checked .item-name, .item.checked .item-subtotal { text-decoration: line-through; }
+
+  .item-num { font-size: 12px; font-weight: 700; color: #9ca3af; text-align: center; }
 
   .item-img { width: 60px; height: 60px; border-radius: 7px; object-fit: cover; background: #f3f4f6; border: 1px solid #e5e7eb; }
   .item-img.placeholder { display: flex; align-items: center; justify-content: center; font-size: 22px; color: #d1d5db; }
@@ -71,6 +73,7 @@
   .item-body { min-width: 0; }
   .item-name { font-size: 13px; font-weight: 600; color: #1f2937; margin-bottom: 3px; word-wrap: break-word; }
   .item-meta { font-size: 11px; color: #6b7280; margin-bottom: 3px; }
+  .item-note { font-size: 11px; color: #6b7280; font-style: italic; margin-bottom: 3px; word-wrap: break-word; }
   .item-subtotal { font-size: 14px; font-weight: 700; color: #EE7203; margin-bottom: 4px; }
   .item-link { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: #2563eb; text-decoration: none; padding: 3px 7px; background: #eff6ff; border-radius: 5px; font-weight: 600; }
   .item-link:active { background: #dbeafe; }
@@ -147,7 +150,7 @@
   .home-empty-section { text-align:center; padding:16px 12px; color:#d1d5db; font-size:13px; background:white; border-radius:12px; border:1px dashed #e5e7eb; }
 
   /* item offline (fara imagine) */
-  .item.offline-item { grid-template-columns: 1fr auto; padding: 10px; }
+  .item.offline-item { grid-template-columns: 22px 1fr auto; padding: 10px; }
 
   /* arhiva – buton restore */
   .icon-btn.restore { color: #059669; }
@@ -262,6 +265,11 @@
     </div>
   </details>
 
+  <div class="field">
+    <label for="f-note">Observații (opțional)</label>
+    <input type="text" id="f-note" placeholder="Ex: culoare, dimensiune, mențiuni...">
+  </div>
+
   <div id="preview" class="preview-box" style="display:none;">
     <img id="preview-img" alt="">
     <div class="preview-body">
@@ -305,6 +313,10 @@
     <div class="field">
       <label for="of-price">Preț (lei)</label>
       <input type="number" id="of-price" step="0.01" min="0" placeholder="opțional" inputmode="decimal">
+    </div>
+    <div class="field">
+      <label for="of-note">Observații (opțional)</label>
+      <input type="text" id="of-note" placeholder="Ex: culoare, dimensiune, mențiuni...">
     </div>
     <div class="form-actions">
       <button type="button" class="btn btn-secondary" id="offline-form-cancel">Renunță</button>
@@ -499,8 +511,8 @@
   const LISTS_KEY_V2 = 'lista-cumparaturi-v2'; // migrare v2
   const LISTS_KEY   = 'lista-cumparaturi-v3';
   // liste: [{ id, name, type:'online'|'offline', status:'active'|'archived', archivedAt?, items:[] }]
-  // items online:  { id, url, img, name, price, qty, checked }
-  // items offline: { id, name, qty, unit, price, checked }
+  // items online:  { id, url, img, name, price, qty, note, checked }
+  // items offline: { id, name, qty, unit, price, note, checked }
   let allLists     = [];
   let activeView   = 'home'; // 'home' | 'list' | 'archive'
   let activeListId = null;
@@ -950,19 +962,21 @@
     Array.from(listEl.querySelectorAll('.item')).forEach(n => n.remove());
     if (items.length === 0) { empty.style.display = 'block'; return; }
     empty.style.display = 'none';
-    items.forEach(i => listEl.appendChild(isOffline ? offlineItemNode(i) : itemNode(i)));
+    items.forEach((i, idx) => listEl.appendChild(isOffline ? offlineItemNode(i, idx + 1) : itemNode(i, idx + 1)));
   }
 
-  function offlineItemNode(i) {
+  function offlineItemNode(i, num) {
     const div = document.createElement('div');
     div.className = 'item offline-item' + (i.checked ? ' checked' : '');
     div.dataset.id = i.id;
     const sub = (i.price||0) * (i.qty||0);
     const unitStr = i.unit ? ` ${escapeHtml(i.unit)}` : ' buc';
     div.innerHTML = `
+      <div class="item-num">${num}</div>
       <div class="item-body">
         <div class="item-name">${escapeHtml(i.name)}</div>
         <div class="item-meta">${fmt(i.price)} lei × ${i.qty}${unitStr}</div>
+        ${i.note ? `<div class="item-note">📝 ${escapeHtml(i.note)}</div>` : ''}
         ${sub > 0 ? `<div class="item-subtotal">${fmt(sub)} lei</div>` : ''}
       </div>
       <div class="item-actions">
@@ -973,7 +987,7 @@
     return div;
   }
 
-  function itemNode(i) {
+  function itemNode(i, num) {
     const div = document.createElement('div');
     div.className = 'item' + (i.checked ? ' checked' : '');
     div.dataset.id = i.id;
@@ -982,10 +996,12 @@
       ? `<img class="item-img" src="${escapeAttr(i.img)}" alt="" loading="lazy" onerror="this.classList.add('placeholder');this.removeAttribute('src');this.alt='?';">`
       : `<div class="item-img placeholder">📦</div>`;
     div.innerHTML = `
+      <div class="item-num">${num}</div>
       ${img}
       <div class="item-body">
         <div class="item-name">${escapeHtml(i.name)}</div>
         <div class="item-meta">${fmt(i.price)} lei × ${i.qty} buc</div>
+        ${i.note ? `<div class="item-note">📝 ${escapeHtml(i.note)}</div>` : ''}
         <div class="item-subtotal">${fmt(sub)} lei</div>
         <a class="item-link" href="${escapeAttr(i.url)}" target="_blank" rel="noopener">🔗 Vezi în shop</a>
       </div>
@@ -1012,6 +1028,7 @@
         $('f-name').value = it.name || '';
         $('f-price').value = it.price;
         $('f-qty').value = it.qty;
+        $('f-note').value = it.note || '';
         label.textContent = '✎ Editezi produs';
         $('form-submit').textContent = 'Salvează';
         $('manual-fields').open = true;
@@ -1046,6 +1063,7 @@
     let img = $('f-img').value.trim();
     let price = parseFloat($('f-price').value) || 0;
     const qty = parseInt($('f-qty').value, 10) || 1;
+    const note = $('f-note').value.trim();
 
     // Auto-fetch dacă lipsesc date și nu suntem în mod editare
     if ((!name || !price) && !editingId) {
@@ -1069,7 +1087,7 @@
       return;
     }
 
-    const data = { url, img, name, price, qty };
+    const data = { url, img, name, price, qty, note };
     if (editingId) {
       const idx = items.findIndex(x => x.id === editingId);
       if (idx !== -1) items[idx] = { ...items[idx], ...data };
@@ -1262,6 +1280,7 @@
         $('of-qty').value = it.qty || 1;
         $('of-unit').value = it.unit || '';
         $('of-price').value = it.price > 0 ? it.price : '';
+        $('of-note').value = it.note || '';
         label.textContent = '✎ Editezi produs';
         $('offline-form-submit').textContent = 'Salvează';
       }
@@ -1287,8 +1306,9 @@
     const qty   = parseInt($('of-qty').value, 10) || 1;
     const unit  = $('of-unit').value.trim();
     const price = parseFloat($('of-price').value) || 0;
+    const note  = $('of-note').value.trim();
     if (!name) { toast('Introdu denumirea produsului'); return; }
-    const data = { name, qty, unit, price };
+    const data = { name, qty, unit, price, note };
     if (offlineEditingId) {
       const idx = items.findIndex(x => x.id === offlineEditingId);
       if (idx !== -1) items[idx] = { ...items[idx], ...data };
@@ -1342,13 +1362,14 @@
       const total = lst.items.reduce((s, i) => s + (i.price||0)*(i.qty||0), 0);
       out += `[ ${lst.name.toUpperCase()} ]\n${'-'.repeat(36)}\n`;
       if (lst.items.length === 0) { out += '  (goală)\n'; }
-      lst.items.forEach(i => {
+      lst.items.forEach((i, idx) => {
         const chk = i.checked ? '[x]' : '[ ]';
         const unit = i.unit || 'buc';
         const sub  = (i.price||0) * (i.qty||0);
         const priceStr = i.price ? ` – ${fmt(i.price)} lei/buc` : '';
         const totStr   = sub > 0 ? ` = ${fmt(sub)} lei` : '';
-        out += `  ${chk} ${i.name}  (${i.qty} ${unit}${priceStr}${totStr})\n`;
+        out += `  ${idx + 1}. ${chk} ${i.name}  (${i.qty} ${unit}${priceStr}${totStr})\n`;
+        if (i.note) out += `      Obs: ${i.note}\n`;
       });
       if (total > 0) out += `\n  Total: ${fmt(total)} lei\n`;
       out += '\n';
@@ -1361,19 +1382,21 @@
   function exportAsCsv() {
     hideExportSheet();
     if (activeLists().length === 0) { toast('Nu ai liste active de exportat'); return; }
-    const rows = [['Lista', 'Produs', 'Cantitate', 'Unitate', 'Pret (lei)', 'Total (lei)', 'Cumparat']];
+    const rows = [['Nr', 'Lista', 'Produs', 'Cantitate', 'Unitate', 'Pret (lei)', 'Total (lei)', 'Cumparat', 'Observatii']];
     activeLists().forEach(lst => {
-      lst.items.forEach(i => {
+      lst.items.forEach((i, idx) => {
         const unit = i.unit || (lst.type === 'offline' ? '' : 'buc');
         const sub  = ((i.price||0) * (i.qty||0)).toFixed(2);
         rows.push([
+          idx + 1,
           lst.name,
           i.name,
           i.qty,
           unit,
           (i.price||0).toFixed(2),
           sub,
-          i.checked ? 'Da' : 'Nu'
+          i.checked ? 'Da' : 'Nu',
+          i.note || ''
         ]);
       });
     });
@@ -1407,6 +1430,7 @@
       price:   parseFloat(x.price) || 0,
       qty:     parseInt(x.qty, 10) || 1,
       unit:    x.unit || '',
+      note:    x.note || '',
       checked: !!x.checked,
     }));
   }
