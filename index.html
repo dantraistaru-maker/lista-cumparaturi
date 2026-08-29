@@ -519,11 +519,14 @@
   let items        = [];
   let editingId    = null;
 
-  // CORS proxies — încercăm pe rând până prinde unul
+  // CORS proxies — încercăm pe rând până prinde unul.
+  // Fiecare întoarce { url, headers }. r.jina.ai are nevoie de X-Return-Format,
+  // altfel livrează Markdown, din care parserul nu poate scoate og:title / prețul.
   const PROXIES = [
-    url => 'https://corsproxy.io/?' + encodeURIComponent(url),
-    url => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
-    url => 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(url),
+    url => ({ url: 'https://r.jina.ai/' + encodeURIComponent(url), headers: { 'X-Return-Format': 'html' } }),
+    url => ({ url: 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url) }),
+    url => ({ url: 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(url) }),
+    url => ({ url: 'https://corsproxy.io/?' + encodeURIComponent(url) }),
   ];
 
   // ============ PERSISTENCE ============
@@ -695,7 +698,8 @@
     let html = null, lastErr = null;
     for (const buildUrl of PROXIES) {
       try {
-        const resp = await fetch(buildUrl(url), { method: 'GET' });
+        const p = buildUrl(url);
+        const resp = await fetch(p.url, { method: 'GET', headers: p.headers || {} });
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         html = await resp.text();
         if (html && html.length > 1000) break;
